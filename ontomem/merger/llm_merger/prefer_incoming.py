@@ -1,4 +1,4 @@
-"""LLM merger that prioritizes incoming item values."""
+"""LLM merger that prefers incoming item values on semantic conflicts."""
 
 from typing import TypeVar
 
@@ -9,7 +9,7 @@ from .base import BaseLLMMerger
 T = TypeVar("T", bound=BaseModel)
 
 
-INCOMING_FIRST_PROMPT = """You are an expert at merging structured data intelligently.
+INCOMING_PROMPT = """You are an expert at merging structured data intelligently.
 
 Given two instances of the same item (identified by the same unique key), 
 merge them into one complete item by combining information from both.
@@ -30,19 +30,20 @@ merge them into one complete item by combining information from both.
 {item_incoming}
 
 **Instructions:**
-Merge the items intelligently. On semantic conflicts, choose the incoming value.
+Merge the items intelligently. When semantic conflicts arise, choose the incoming value.
 Ensure the output matches the expected schema."""
 
 
-class IncomingFirstMerger(BaseLLMMerger[T]):
-    """LLM merger that prioritizes incoming item values on conflicts.
+class PreferIncomingMerger(BaseLLMMerger[T]):
+    """LLM merger that prefers incoming item values when semantic conflicts arise.
 
     Merges information from both items, combining data to create a complete result.
-    When conflicts occur (both items have valid values), the incoming item wins.
+    When semantic conflicts occur (both items have valid but different values), 
+    the incoming item's value is preferred.
 
     Key Features:
         - Batch optimization: Minimizes LLM API calls via tournament algorithm
-        - Latest-first strategy: Incoming data takes precedence
+        - Latest-first strategy: Incoming data takes precedence on conflicts
         - Structured output: Returns Pydantic models matching input schema
         - Error handling: Automatic fallback to incoming item on failure
 
@@ -65,7 +66,7 @@ class IncomingFirstMerger(BaseLLMMerger[T]):
         ...     status: str | None = None
         >>>
         >>> llm = ChatOpenAI(model="gpt-4o")
-        >>> merger = IncomingFirstMerger(
+        >>> merger = PreferIncomingMerger(
         ...     key_extractor=lambda x: x.uid,
         ...     llm_client=llm,
         ...     item_schema=User,
@@ -78,9 +79,9 @@ class IncomingFirstMerger(BaseLLMMerger[T]):
         >>>
         >>> merged = merger.merge(items)
         >>> # Result: User(uid="u1", name="Alicia", email="alice@new.com", status="active")
-        >>> # Note: incoming values win on conflicts, but all info is merged
+        >>> # Note: when semantic conflicts arise, incoming values are preferred
     """
 
     def get_system_prompt(self) -> str:
-        """Return the incoming-first merge system prompt."""
-        return INCOMING_FIRST_PROMPT
+        """Return the incoming merge system prompt."""
+        return INCOMING_PROMPT

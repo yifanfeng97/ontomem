@@ -1,4 +1,4 @@
-# 🧠 Ontomem: 自我整合的记忆层
+# 🧠 Ontomem: 自我整合的记忆系统
 
 [English](README.md) | 中文版本
 
@@ -6,8 +6,11 @@
 
 > **让你的 AI 智能体拥有"连贯"的记忆，而不仅仅是"碎片"的检索。**
 
+[![PyPI 版本](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI 下载数](https://img.shields.io/pypi/dm/ontomem.svg)](https://pypi.org/project/ontomem/)
+
 
 传统的 RAG（检索增强生成）系统检索文本碎片。**Ontomem** 采用 Pydantic 模式维护**结构化实体**，并通过智能合并算法自动将碎片化的观察融合为完整的知识图谱节点。
 
@@ -168,15 +171,17 @@ for experience in results:
 | 策略 | 行为 | 适用场景 |
 |------|------|---------|
 | `FIELD_MERGE` | 非空覆盖、列表追加 | 简单属性收集 |
-| `KEEP_NEW` | 最新数据优先 | 状态更新（当前角色、最后在线时间） |
-| `KEEP_OLD` | 首个观察保留 | 历史记录（首次发布年份） |
+| `KEEP_INCOMING` | 最新数据优先 | 状态更新（当前角色、最后在线时间） |
+| `KEEP_EXISTING` | 首个观察保留 | 历史记录（首次发布年份） |
 | `LLM.BALANCED` | **LLM 驱动的语义合并** | 复杂综合、矛盾解决 |
+| `LLM.PREFER_INCOMING` | **LLM 语义合并，语义冲突优先新数据** | 新信息应在出现矛盾时优先考虑 |
+| `LLM.PREFER_EXISTING` | **LLM 语义合并，语义冲突优先旧数据** | 现有数据应在出现矛盾时优先考虑 |
 
 ```python
-# 示例：LLM 智能合并冲突的分析
+# 示例：LLM 智能合并冲突的信息
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    merge_strategy=MergeStrategy.LLM.BALANCED  # 或 LLM.PREFER_INCOMING、LLM.PREFER_EXISTING
 )
 ```
 
@@ -335,10 +340,16 @@ experience_memory.clear()
 我们在构建下一代 AI 记忆标准。欢迎 PR 和 Issue！
 
 ---
+## 👨‍💻 作者
 
+**Yifan Feng** - [evanfeng97@gmail.com](mailto:evanfeng97@gmail.com)
+
+---
 ## 📝 许可证
 
-MIT 许可证 - 详见 LICENSE 文件。
+根据 Apache License, Version 2.0 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+您可以在 Apache License 2.0 的条款下自由使用、修改和分发此软件。
 
 ---
 

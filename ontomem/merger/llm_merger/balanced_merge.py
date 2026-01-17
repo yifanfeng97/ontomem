@@ -47,7 +47,7 @@ class BalancedMerger(BaseLLMMerger[T]):
         - Batch optimization: Minimizes LLM API calls via tournament algorithm
         - Intelligent conflict resolution: LLM makes semantic decisions
         - Structured output: Returns Pydantic models matching input schema
-        - Error handling: Automatic fallback to keep_new strategy
+        - Error handling: Automatic fallback to keep_incoming strategy
 
     Performance:
         - Without batching: N duplicate items = N API calls

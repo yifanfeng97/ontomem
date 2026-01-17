@@ -1,4 +1,4 @@
-# 🧠 Ontomem: The Self-Consolidating Memory Layer
+# 🧠 Ontomem: The Self-Consolidating Memory
 
 [中文版本](README_ZH.md) | English
 
@@ -6,8 +6,11 @@
 
 > **Give your AI agent a "coherent" memory, not just "fragmented" retrieval.**
 
+[![PyPI version](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI downloads](https://img.shields.io/pypi/dm/ontomem.svg)](https://pypi.org/project/ontomem/)
+
 
 Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **Ontomem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms. It automatically consolidates fragmented observations into complete knowledge graph nodes.
 
@@ -167,15 +170,17 @@ Choose how to handle conflicts:
 | Strategy | Behavior | Use Case |
 |----------|----------|----------|
 | `FIELD_MERGE` | Non-null overwrites, lists append | Simple attribute collection |
-| `KEEP_NEW` | Latest data wins | Status updates (current role, last seen) |
-| `KEEP_OLD` | First observation stays | Historical records (first publication year) |
+| `KEEP_INCOMING` | Latest data wins | Status updates (current role, last seen) |
+| `KEEP_EXISTING` | First observation stays | Historical records (first publication year) |
 | `LLM.BALANCED` | **LLM-driven semantic merging** | Complex synthesis, contradiction resolution |
+| `LLM.PREFER_INCOMING` | **LLM merges semantically, prefers new data on conflict** | New information should take priority when contradictions arise |
+| `LLM.PREFER_EXISTING` | **LLM merges semantically, prefers existing data on conflict** | Existing data should take priority when contradictions arise |
 
 ```python
-# Example: LLM intelligently merges conflicting bios
+# Example: LLM intelligently merges conflicting information
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    merge_strategy=MergeStrategy.LLM.BALANCED  # or LLM.PREFER_INCOMING, LLM.PREFER_EXISTING
 )
 ```
 
@@ -335,9 +340,17 @@ We're building the next generation of AI memory standards. PRs and issues welcom
 
 ---
 
+## 👨‍💻 Author
+
+**Yifan Feng** - [evanfeng97@gmail.com](mailto:evanfeng97@gmail.com)
+
+---
+
 ## 📝 License
 
-MIT License - See LICENSE file for details.
+Licensed under the Apache License, Version 2.0 - See [LICENSE](LICENSE) file for details.
+
+You are free to use, modify, and distribute this software under the terms of the Apache License 2.0.
 
 ---
 

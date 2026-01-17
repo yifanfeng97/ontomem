@@ -9,17 +9,19 @@ from .core.base import BaseMem
 from .merger import (
     BaseMerger,
     FieldMerger,
-    KeepNewMerger,
-    KeepOldMerger,
+    KeepIncomingMerger,
+    KeepExistingMerger,
     BaseLLMMerger,
     BalancedMerger,
-    ExistingFirstMerger,
-    IncomingFirstMerger,
+    PreferExistingMerger,
+    PreferIncomingMerger,
     MergeStrategy
 )
 from .utils.logging import configure_logging, get_logger
 
 __version__ = "0.1.0"
+__author__ = "Yifan Feng"
+__email__ = "evanfeng97@gmail.com"
 
 __all__ = [
     # Main API
@@ -29,12 +31,12 @@ __all__ = [
     "BaseMerger",
     "BaseLLMMerger",
     # Built-in Strategies
-    "KeepNewMerger",
-    "KeepOldMerger",
+    "KeepIncomingMerger",
+    "KeepExistingMerger",
     "FieldMerger",
     "BalancedMerger",
-    "ExistingFirstMerger",
-    "IncomingFirstMerger",
+    "PreferExistingMerger",
+    "PreferIncomingMerger",
     # Types
     "MergeStrategy",
     # Utilities

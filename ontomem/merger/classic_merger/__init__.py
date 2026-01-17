@@ -1,11 +1,11 @@
 """Classic deterministic merge strategies."""
 
 from .merge_field import FieldMerger
-from .keep_new import KeepNewMerger
-from .keep_old import KeepOldMerger
+from .keep_existing import KeepExistingMerger
+from .keep_incoming import KeepIncomingMerger
 
 __all__ = [
-    "KeepNewMerger",
-    "KeepOldMerger",
+    "KeepIncomingMerger",
+    "KeepExistingMerger",
     "FieldMerger",
 ]

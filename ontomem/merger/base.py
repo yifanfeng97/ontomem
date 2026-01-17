@@ -53,11 +53,11 @@ class BaseMerger(ABC, Generic[T]):
         Total: 3 rounds, 4 merge operations (all batchable)
 
     Example:
-        >>> class SimpleKeepNewMerger(BaseMerger[Item]):
+        >>> class SimpleKeepIncomingMerger(BaseMerger[Item]):
         ...     def pair_merge(self, existing, incoming):
         ...         return incoming
         >>>
-        >>> merger = SimpleKeepNewMerger(key_extractor=lambda x: x.id)
+        >>> merger = SimpleKeepIncomingMerger(key_extractor=lambda x: x.id)
         >>> merged_items = merger.merge(items)
     """
 

@@ -1,4 +1,4 @@
-"""LLM merger that prioritizes existing item values."""
+"""LLM merger that prefers existing item values on semantic conflicts."""
 
 from typing import TypeVar
 
@@ -9,7 +9,7 @@ from .base import BaseLLMMerger
 T = TypeVar("T", bound=BaseModel)
 
 
-EXISTING_FIRST_PROMPT = """You are an expert at merging structured data intelligently.
+EXISTING_PROMPT = """You are an expert at merging structured data intelligently.
 
 Given two instances of the same item (identified by the same unique key), 
 merge them into one complete item by combining information from both.
@@ -30,19 +30,20 @@ merge them into one complete item by combining information from both.
 {item_incoming}
 
 **Instructions:**
-Merge the items intelligently. On semantic conflicts, choose the existing value.
+Merge the items intelligently. When semantic conflicts arise, choose the existing value.
 Ensure the output matches the expected schema."""
 
 
-class ExistingFirstMerger(BaseLLMMerger[T]):
-    """LLM merger that prioritizes existing item values on conflicts.
+class PreferExistingMerger(BaseLLMMerger[T]):
+    """LLM merger that prefers existing item values when semantic conflicts arise.
 
     Merges information from both items, combining data to create a complete result.
-    When conflicts occur (both items have valid values), the existing item wins.
+    When semantic conflicts occur (both items have valid but different values), 
+    the existing item's value is preferred.
 
     Key Features:
         - Batch optimization: Minimizes LLM API calls via tournament algorithm
-        - Preservation strategy: Existing data takes precedence
+        - Preservation strategy: Existing data takes precedence on conflicts
         - Structured output: Returns Pydantic models matching input schema
         - Error handling: Automatic fallback to existing item on failure
 
@@ -65,7 +66,7 @@ class ExistingFirstMerger(BaseLLMMerger[T]):
         ...     created_at: str | None = None
         >>>
         >>> llm = ChatOpenAI(model="gpt-4o")
-        >>> merger = ExistingFirstMerger(
+        >>> merger = PreferExistingMerger(
         ...     key_extractor=lambda x: x.uid,
         ...     llm_client=llm,
         ...     item_schema=User,
@@ -78,9 +79,9 @@ class ExistingFirstMerger(BaseLLMMerger[T]):
         >>>
         >>> merged = merger.merge(items)
         >>> # Result: User(uid="u1", name="Alice", email="alice@old.com", created_at="2024-01-01")
-        >>> # Note: existing values win on conflicts, but all info is merged
+        >>> # Note: when semantic conflicts arise, existing values are preserved
     """
 
     def get_system_prompt(self) -> str:
-        """Return the existing-first merge system prompt."""
-        return EXISTING_FIRST_PROMPT
+        """Return the existing merge system prompt."""
+        return EXISTING_PROMPT

@@ -7,13 +7,13 @@ from pydantic import BaseModel
 
 from .base import BaseMerger
 from .classic_merger.merge_field import FieldMerger
-from .classic_merger.keep_new import KeepNewMerger
-from .classic_merger.keep_old import KeepOldMerger
+from .classic_merger.keep_incoming import KeepIncomingMerger
+from .classic_merger.keep_existing import KeepExistingMerger
 from .llm_merger import (
     BaseLLMMerger,
     BalancedMerger,
-    ExistingFirstMerger,
-    IncomingFirstMerger,
+    PreferExistingMerger,
+    PreferIncomingMerger,
 )
 
 if TYPE_CHECKING:
@@ -30,8 +30,8 @@ class MergeStrategy(str, Enum):
     when the same unique key is encountered multiple times.
 
     Strategies:
-        KEEP_OLD: Keep the existing item, discard the new one
-        KEEP_NEW: Keep the new item, discard the existing one (default)
+        KEEP_EXISTING: Keep the existing item, discard the incoming one
+        KEEP_INCOMING: Keep the incoming item, discard the existing one (default)
         FIELD_MERGE: Merge fields from both items (new fills old's None fields)
 
     Example:
@@ -40,8 +40,8 @@ class MergeStrategy(str, Enum):
         >>> print(strategy.value)  # "field_merge"
     """
 
-    KEEP_OLD = "keep_old"
-    KEEP_NEW = "keep_new"
+    KEEP_OLD = "keep_old"  # Backwards compatible alias for KEEP_EXISTING
+    KEEP_NEW = "keep_new"  # Backwards compatible alias for KEEP_INCOMING
     FIELD_MERGE = "field_merge"
 
     @nonmember
@@ -49,7 +49,7 @@ class MergeStrategy(str, Enum):
         """LLM-powered merge strategies namespace.
 
         These strategies use Language Models to intelligently merge items,
-        with different conflict resolution preferences.
+        with different semantic conflict resolution preferences.
 
         Usage:
             >>> from ontomem.merger import MergeStrategy
@@ -59,11 +59,11 @@ class MergeStrategy(str, Enum):
         BALANCED = "llm_balanced"
         """Balanced merging with no preference between existing and incoming."""
 
-        EXISTING_FIRST = "llm_existing_first"
-        """Prioritize existing item values, use incoming only for gaps."""
+        PREFER_EXISTING = "llm_prefer_existing"
+        """When semantic conflicts arise, prioritize existing item values."""
 
-        INCOMING_FIRST = "llm_incoming_first"
-        """Prioritize incoming item values, use existing only for gaps."""
+        PREFER_INCOMING = "llm_prefer_incoming"
+        """When semantic conflicts arise, prioritize incoming item values."""
 
 
 def create_merger(
@@ -76,8 +76,8 @@ def create_merger(
 
     Args:
         strategy: MergeStrategy enum value. Can be:
-            - Classic strategies: MergeStrategy.KEEP_OLD, MergeStrategy.KEEP_NEW, MergeStrategy.FIELD_MERGE
-            - LLM strategies: MergeStrategy.LLM.BALANCED, MergeStrategy.LLM.EXISTING_FIRST, MergeStrategy.LLM.INCOMING_FIRST
+            - Classic strategies: MergeStrategy.KEEP_EXISTING, MergeStrategy.KEEP_INCOMING, MergeStrategy.FIELD_MERGE
+            - LLM strategies: MergeStrategy.LLM.BALANCED, MergeStrategy.LLM.PREFER_EXISTING, MergeStrategy.LLM.PREFER_INCOMING
         key_extractor: Function to extract unique key from items.
         llm_client: LLM client (required for LLM strategies). Defaults to None.
         item_schema: Pydantic model schema (required for LLM strategies). Defaults to None.
@@ -98,19 +98,19 @@ def create_merger(
     """
     # Strategy mapper: MergeStrategy value -> Merger class
     strategy_map = {
-        MergeStrategy.KEEP_OLD: KeepOldMerger,
-        MergeStrategy.KEEP_NEW: KeepNewMerger,
+        MergeStrategy.KEEP_OLD: KeepExistingMerger,
+        MergeStrategy.KEEP_NEW: KeepIncomingMerger,
         MergeStrategy.FIELD_MERGE: FieldMerger,
         MergeStrategy.LLM.BALANCED: BalancedMerger,
-        MergeStrategy.LLM.EXISTING_FIRST: ExistingFirstMerger,
-        MergeStrategy.LLM.INCOMING_FIRST: IncomingFirstMerger,
+        MergeStrategy.LLM.PREFER_EXISTING: PreferExistingMerger,
+        MergeStrategy.LLM.PREFER_INCOMING: PreferIncomingMerger,
     }
 
     # Determine if this is an LLM strategy
     is_llm = strategy in (
         MergeStrategy.LLM.BALANCED,
-        MergeStrategy.LLM.EXISTING_FIRST,
-        MergeStrategy.LLM.INCOMING_FIRST,
+        MergeStrategy.LLM.PREFER_EXISTING,
+        MergeStrategy.LLM.PREFER_INCOMING,
     )
 
     # Validate strategy
@@ -145,12 +145,12 @@ def create_merger(
 __all__ = [
     "BaseMerger",
     "FieldMerger",
-    "KeepNewMerger",
-    "KeepOldMerger",
+    "KeepIncomingMerger",
+    "KeepExistingMerger",
     "BaseLLMMerger",
     "BalancedMerger",
-    "ExistingFirstMerger",
-    "IncomingFirstMerger",
+    "PreferExistingMerger",
+    "PreferIncomingMerger",
     "MergeStrategy",
     "create_merger",
 ]

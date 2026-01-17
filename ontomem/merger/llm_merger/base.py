@@ -90,7 +90,7 @@ class BaseLLMMerger(BaseMerger[T]):
             return merged
         except Exception as e:
             self.logger.error(
-                f"LLM pair merge failed: {e}. Falling back to keep_new strategy."
+                f"LLM pair merge failed: {e}. Falling back to keep_incoming strategy."
             )
             return incoming
 

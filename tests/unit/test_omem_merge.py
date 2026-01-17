@@ -52,8 +52,8 @@ class TestFieldMergeStrategy:
         assert result.bio == "Engineer"  # Preserved
 
 
-class TestKeepNewStrategy:
-    """Test KEEP_NEW strategy: latest entry wins."""
+class TestKeepIncomingStrategy:
+    """Test KEEP_INCOMING strategy: latest entry wins."""
 
     @pytest.fixture
     def memory(self):
@@ -65,7 +65,7 @@ class TestKeepNewStrategy:
             merge_strategy=MergeStrategy.KEEP_NEW
         )
 
-    def test_keep_new_overwrites_all(self, memory):
+    def test_keep_incoming_overwrites_all(self, memory):
         """Test that new entry completely replaces old."""
         old = Profile(uid="u1", name="Alice", skills=["Python"], bio="Dev")
         new = Profile(uid="u1", name="Bob", skills=["Java"], bio=None)
@@ -79,8 +79,8 @@ class TestKeepNewStrategy:
         assert result.bio is None  # Even None overwrites
 
 
-class TestKeepOldStrategy:
-    """Test KEEP_OLD strategy: first entry wins."""
+class TestKeepExistingStrategy:
+    """Test KEEP_EXISTING strategy: first entry wins."""
 
     @pytest.fixture
     def memory(self):
@@ -92,7 +92,7 @@ class TestKeepOldStrategy:
             merge_strategy=MergeStrategy.KEEP_OLD
         )
 
-    def test_keep_old_ignores_new(self, memory):
+    def test_keep_existing_ignores_new(self, memory):
         """Test that new entry is completely ignored."""
         old = Profile(uid="u1", name="Alice", skills=["Python"])
         new = Profile(uid="u1", name="Bob", skills=["Java"])

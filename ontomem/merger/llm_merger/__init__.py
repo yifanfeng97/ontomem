@@ -2,12 +2,12 @@
 
 from .base import BaseLLMMerger
 from .balanced_merge import BalancedMerger
-from .existing_first import ExistingFirstMerger
-from .incoming_first import IncomingFirstMerger
+from .prefer_existing import PreferExistingMerger
+from .prefer_incoming import PreferIncomingMerger
 
 __all__ = [
     "BaseLLMMerger",
     "BalancedMerger",
-    "ExistingFirstMerger",
-    "IncomingFirstMerger",
+    "PreferExistingMerger",
+    "PreferIncomingMerger",
 ]
