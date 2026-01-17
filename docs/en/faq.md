@@ -319,7 +319,7 @@ mkdocs serve
 
 ### Q: Is Ontomem production-ready?
 
-**A:** Ontomem is currently at version 0.1.0 (alpha). It's suitable for experimentation and development. Use in production with caution and thorough testing.
+**A:** Ontomem is currently at version 0.1.1 (alpha). It's suitable for experimentation and development. Use in production with caution and thorough testing.
 
 ### Q: What's the roadmap?
 
