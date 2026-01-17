@@ -1,10 +1,10 @@
 # 🧠 Ontomem: The Self-Consolidating Memory
 
-<p align="center">
+<center>
 
 [中文版本](README_ZH.md) | English
 
-</p>
+</center>
 
 **Ontomem** is built on the concept of *Ontology Memory*—structured, coherent knowledge representation for AI systems.
 
@@ -14,14 +14,14 @@
   <img src="docs/assets/fw.png" alt="Ontomem Framework Diagram" width="800" />
 </p>
 
-<p align="center">
+<center>
 
 [![PyPI version](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI downloads](https://img.shields.io/pypi/dm/ontomem.svg)](https://pypi.org/project/ontomem/)
 
-</p>
+</center>
 
 Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **Ontomem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms. It automatically consolidates fragmented observations into complete knowledge graph nodes.
 

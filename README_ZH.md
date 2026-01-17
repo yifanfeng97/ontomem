@@ -1,10 +1,10 @@
 # 🧠 Ontomem: 自我整合的记忆系统
 
-<p align="center">
+<center>
 
 [English](README.md) | 中文版本
 
-</p>
+</center>
 
 **Ontomem** 构建于*本体记忆*（Ontology Memory）的概念之上——为 AI 系统提供结构化、连贯的知识表示。
 
@@ -14,14 +14,14 @@
   <img src="docs/assets/fw.png" alt="Ontomem Framework Diagram" width="800" />
 </p>
 
-<p align="center">
+<center>
 
 [![PyPI 版本](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI 下载数](https://img.shields.io/pypi/dm/ontomem.svg)](https://pypi.org/project/ontomem/)
 
-</p>
+</center>
 
 
 传统的 RAG（检索增强生成）系统检索文本碎片。**Ontomem** 采用 Pydantic 模式维护**结构化实体**，并通过智能合并算法自动将碎片化的观察融合为完整的知识图谱节点。
