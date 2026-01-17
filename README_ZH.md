@@ -6,6 +6,10 @@
 
 > **让你的 AI 智能体拥有"连贯"的记忆，而不仅仅是"碎片"的检索。**
 
+<p align="center">
+  <img src="docs/assets/fw.png" alt="Ontomem Framework Diagram" width="600" />
+</p>
+
 [![PyPI 版本](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)

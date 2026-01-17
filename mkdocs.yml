@@ -1,0 +1,113 @@
+site_name: Ontomem
+site_description: A self-consolidating memory layer for AI agents
+site_author: Yifan Feng
+site_url: https://ontomem.readthedocs.io/
+
+repo_url: https://github.com/yifanfeng97/ontomem
+repo_name: ontomem
+edit_uri: edit/main/docs
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.png
+  language: en
+  palette:
+    - scheme: light
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: dark
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - toc.follow
+
+plugins:
+  - search:
+      lang: en
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            separate_signature: true
+
+nav:
+  - Home: en/index.md
+  - Getting Started:
+    - Quick Start: en/quick-start.md
+    - Installation: en/installation.md
+    - Basic Concepts: en/basic-concepts.md
+  - User Guide:
+    - Overview: en/user-guide/overview.md
+    - Merge Strategies: en/user-guide/merge-strategies.md
+    - Search: en/user-guide/search-capabilities.md
+    - Persistence: en/user-guide/persistence.md
+    - Advanced: en/user-guide/advanced-usage.md
+  - API Reference:
+    - Overview: en/api/overview.md
+    - Core: en/api/core.md
+    - Merger: en/api/merger.md
+    - Utils: en/api/utils.md
+  - Examples: en/examples/examples-overview.md
+  - FAQ: en/faq.md
+  - Contributing: en/contributing.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - admonition
+  - attr_list
+  - footnotes
+  - meta
+  - tables
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/yifanfeng97/ontomem
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/ontomem/
+  alternate:
+    - name: English
+      lang: en
+      link: /en/
+    - name: 中文
+      lang: zh
+      link: /zh/
+
+copyright: Copyright &copy; 2026-2036 Yifan Feng
