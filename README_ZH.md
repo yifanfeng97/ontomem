@@ -301,15 +301,15 @@ uv sync --group dev
 </details>
 
 ---
+## 👨‍💻 作者
+
+**Yifan Feng** - [evanfeng97@gmail.com](mailto:evanfeng97@gmail.com)
+
+---
 
 ## 🤝 贡献
 
 我们在构建下一代 AI 记忆标准。欢迎 PR 和 Issue！
-
----
-## 👨‍💻 作者
-
-**Yifan Feng** - [evanfeng97@gmail.com](mailto:evanfeng97@gmail.com)
 
 ---
 ## 📝 许可证

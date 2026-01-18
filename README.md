@@ -307,15 +307,15 @@ uv sync --group dev
 
 ---
 
-## 🤝 Contributing
-
-We're building the next generation of AI memory standards. PRs and issues welcome!
-
----
-
 ## 👨‍💻 Author
 
 **Yifan Feng** - [evanfeng97@gmail.com](mailto:evanfeng97@gmail.com)
+
+---
+
+## 🤝 Contributing
+
+We're building the next generation of AI memory standards. PRs and issues welcome!
 
 ---
 
