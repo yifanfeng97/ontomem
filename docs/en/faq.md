@@ -4,7 +4,7 @@
 
 ### Q: What are the system requirements?
 
-**A:** Ontomem requires:
+**A:** OntoMem requires:
 - Python 3.11 or higher
 - 2GB RAM minimum
 - Any OS: Linux, macOS, or Windows
@@ -18,7 +18,7 @@ For GPU acceleration (NVIDIA only):
 pip install faiss-gpu
 ```
 
-### Q: Can I use Ontomem without LLM features?
+### Q: Can I use OntoMem without LLM features?
 
 **A:** Yes! LLM features are optional. You can use classic merge strategies (FIELD_MERGE, KEEP_INCOMING, KEEP_EXISTING) without any LLM client or embedder.
 
@@ -159,7 +159,7 @@ df.to_csv("export.csv", index=False)
 
 ## Performance & Scaling
 
-### Q: How many entities can Ontomem handle?
+### Q: How many entities can OntoMem handle?
 
 **A:** Depends on:
 - Available RAM
@@ -286,7 +286,7 @@ if len(keys) != len(set(keys)):
 
 ## Contributing & Development
 
-### Q: How do I contribute to Ontomem?
+### Q: How do I contribute to OntoMem?
 
 **A:**
 1. Fork the repository
@@ -317,9 +317,9 @@ mkdocs serve
 
 ## Other Questions
 
-### Q: Is Ontomem production-ready?
+### Q: Is OntoMem production-ready?
 
-**A:** Ontomem is currently at version 0.1.2 (alpha). It's suitable for experimentation and development. Use in production with caution and thorough testing.
+**A:** OntoMem is currently at version 0.1.3 (alpha). It's suitable for experimentation and development. Use in production with caution and thorough testing.
 
 ### Q: What's the roadmap?
 

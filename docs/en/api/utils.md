@@ -1,6 +1,6 @@
 # Utils Module
 
-Utility functions and helpers for Ontomem.
+Utility functions and helpers for OntoMem.
 
 ## Logging
 

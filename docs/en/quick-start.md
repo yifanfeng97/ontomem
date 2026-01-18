@@ -1,6 +1,6 @@
 # Quick Start
 
-Get up and running with Ontomem in 5 minutes.
+Get up and running with OntoMem in 5 minutes.
 
 ## Installation
 
@@ -45,7 +45,7 @@ class ResearcherProfile(BaseModel):
     last_updated: Optional[datetime] = None
 ```
 
-### Step 2: Initialize Ontomem
+### Step 2: Initialize OntoMem
 
 ```python
 from ontomem import OMem, MergeStrategy
@@ -91,7 +91,7 @@ print(f"Interests: {researcher.research_interests}")
 
 ## Auto-Consolidation Example
 
-Here's where Ontomem shines—automatic merging of fragmented data:
+Here's where OntoMem shines—automatic merging of fragmented data:
 
 ```python
 # Day 1: You learn about Yann LeCun

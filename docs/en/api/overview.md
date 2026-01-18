@@ -1,6 +1,6 @@
 # API Overview
 
-Complete API reference for Ontomem.
+Complete API reference for OntoMem.
 
 ## Core Class: OMem
 
@@ -253,7 +253,7 @@ Check version:
 
 ```python
 import ontomem
-print(ontomem.__version__)  # e.g., "0.1.2"
+print(ontomem.__version__)  # e.g., "0.1.3"
 ```
 
 ---

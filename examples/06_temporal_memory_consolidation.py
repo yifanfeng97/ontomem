@@ -1,8 +1,8 @@
 """
 Example 06: Temporal Memory Consolidation (Time-Slicing)
 
-This example demonstrates how Ontomem effectively handles time-series data.
-By using a composite key (date + user_id), Ontomem automatically consolidates
+This example demonstrates how OntoMem effectively handles time-series data.
+By using a composite key (date + user_id), OntoMem automatically consolidates
 fragmented observations from the same day into a single "Daily Summary" record,
 while keeping different days separate.
 

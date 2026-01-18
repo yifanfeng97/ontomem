@@ -1,6 +1,6 @@
 # 快速开始
 
-5 分钟快速上手 Ontomem。
+5 分钟快速上手 OntoMem。
 
 ## 安装
 
@@ -45,7 +45,7 @@ class ResearcherProfile(BaseModel):
     last_updated: Optional[datetime] = None
 ```
 
-### 第 2 步：初始化 Ontomem
+### 第 2 步：初始化 OntoMem
 
 ```python
 from ontomem import OMem, MergeStrategy
@@ -91,7 +91,7 @@ print(f"研究兴趣: {researcher.research_interests}")
 
 ## 自动整合示例
 
-这就是 Ontomem 的亮点——自动合并碎片化数据：
+这就是 OntoMem 的亮点——自动合并碎片化数据：
 
 ```python
 # 第 1 天：了解 Yann LeCun

@@ -61,7 +61,7 @@ python 05_conversation_history.py
 
 ## 无需 API ✅
 
-此示例无需任何外部 API 密钥或依赖，仅需核心 Ontomem 包。
+此示例无需任何外部 API 密钥或依赖，仅需核心 OntoMem 包。
 
 ## 您将学到
 
@@ -69,7 +69,7 @@ python 05_conversation_history.py
 2. **增量累积**：通过对话渐进构建档案
 3. **上下文维护**：保持对话上下文追踪
 4. **偏好追踪**：记录用户偏好和兴趣
-5. **对话集成**：将 Ontomem 与聊天系统集成
+5. **对话集成**：将 OntoMem 与聊天系统集成
 
 ## 复杂度
 

@@ -1,10 +1,10 @@
 # Basic Concepts
 
-Understand the core concepts that make Ontomem work.
+Understand the core concepts that make OntoMem work.
 
 ## Schema-First Design
 
-Ontomem uses **Pydantic** models to define the structure of your memories. This ensures type safety and IDE support.
+OntoMem uses **Pydantic** models to define the structure of your memories. This ensures type safety and IDE support.
 
 ```python
 from pydantic import BaseModel
@@ -35,7 +35,7 @@ memory = OMem(
 )
 ```
 
-When you add an entity with an existing key, Ontomem **merges** it instead of creating a duplicate.
+When you add an entity with an existing key, OntoMem **merges** it instead of creating a duplicate.
 
 ## Merge Strategies
 
@@ -69,7 +69,7 @@ memory = OMem(
 
 ## Hybrid Search
 
-Ontomem offers two ways to find memories:
+OntoMem offers two ways to find memories:
 
 ### 1. Key-Based Lookup (O(1))
 

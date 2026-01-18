@@ -1,6 +1,6 @@
 # Examples Overview
 
-Explore 6 real-world usage examples of Ontomem demonstrating different capabilities and use cases.
+Explore 6 real-world usage examples of OntoMem demonstrating different capabilities and use cases.
 
 ## Featured Examples
 

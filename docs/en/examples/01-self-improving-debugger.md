@@ -2,7 +2,7 @@
 
 ## Overview
 
-An AI debugging agent that learns from each bug it encounters, building an evolving knowledge base of solutions. Each time the same error is encountered, Ontomem consolidates previous experiences using LLM-powered merging to generate better solutions.
+An AI debugging agent that learns from each bug it encounters, building an evolving knowledge base of solutions. Each time the same error is encountered, OntoMem consolidates previous experiences using LLM-powered merging to generate better solutions.
 
 ## Theme
 

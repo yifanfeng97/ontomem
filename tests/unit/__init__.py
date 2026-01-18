@@ -1,1 +1,1 @@
-"""Unit tests for Ontomem."""
+"""Unit tests for OntoMem."""

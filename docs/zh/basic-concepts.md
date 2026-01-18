@@ -1,10 +1,10 @@
 # 基本概念
 
-了解 Ontomem 工作的核心概念。
+了解 OntoMem 工作的核心概念。
 
 ## Schema-First 设计
 
-Ontomem 使用 **Pydantic** 模型来定义你的记忆结构。这确保了类型安全性和 IDE 支持。
+OntoMem 使用 **Pydantic** 模型来定义你的记忆结构。这确保了类型安全性和 IDE 支持。
 
 ```python
 from pydantic import BaseModel
@@ -35,7 +35,7 @@ memory = OMem(
 )
 ```
 
-当你添加具有现有键的实体时，Ontomem 会**合并**它而不是创建重复。
+当你添加具有现有键的实体时，OntoMem 会**合并**它而不是创建重复。
 
 ## 合并策略
 
@@ -69,7 +69,7 @@ memory = OMem(
 
 ## 混合搜索
 
-Ontomem 提供两种查找记忆的方式：
+OntoMem 提供两种查找记忆的方式：
 
 ### 1. 基于键的查询 (O(1))
 

@@ -1,6 +1,6 @@
 # Contributing
 
-We welcome contributions to Ontomem! Here's how to get started.
+We welcome contributions to OntoMem! Here's how to get started.
 
 ## Development Setup
 

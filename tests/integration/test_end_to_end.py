@@ -1,4 +1,4 @@
-"""End-to-end integration tests for Ontomem."""
+"""End-to-end integration tests for OntoMem."""
 import pytest
 from pydantic import BaseModel
 from ontomem import OMem

@@ -4,7 +4,7 @@
 
 ### Q: 系统需求是什么？
 
-**A:** Ontomem 需要：
+**A:** OntoMem 需要：
 - Python 3.11 或更高版本
 - 最少 2GB RAM
 - 任何操作系统：Linux、macOS 或 Windows
@@ -18,7 +18,7 @@
 pip install faiss-gpu
 ```
 
-### Q: 我可以在不使用 LLM 功能的情况下使用 Ontomem 吗？
+### Q: 我可以在不使用 LLM 功能的情况下使用 OntoMem 吗？
 
 **A:** 可以！LLM 功能是可选的。你可以使用经典合并策略（FIELD_MERGE、KEEP_INCOMING、KEEP_EXISTING）而无需任何 LLM 客户端或嵌入器。
 
@@ -159,7 +159,7 @@ df.to_csv("export.csv", index=False)
 
 ## 性能和扩展
 
-### Q: Ontomem 可以处理多少个实体？
+### Q: OntoMem 可以处理多少个实体？
 
 **A:** 取决于：
 - 可用 RAM
@@ -286,7 +286,7 @@ if len(keys) != len(set(keys)):
 
 ## 贡献和开发
 
-### Q: 我如何为 Ontomem 做贡献？
+### Q: 我如何为 OntoMem 做贡献？
 
 **A:**
 1. Fork 仓库
@@ -317,9 +317,9 @@ mkdocs serve
 
 ## 其他问题
 
-### Q: Ontomem 是否可用于生产？
+### Q: OntoMem 是否可用于生产？
 
-**A:** Ontomem 目前处于版本 0.1.2（alpha）。它适合实验和开发。在生产中使用时要谨慎并进行彻底测试。
+**A:** OntoMem 目前处于版本 0.1.3（alpha）。它适合实验和开发。在生产中使用时要谨慎并进行彻底测试。
 
 ### Q: 路线图是什么？
 

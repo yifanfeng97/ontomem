@@ -1,6 +1,6 @@
 # 安装
 
-Ontomem 的完整安装指南。
+OntoMem 的完整安装指南。
 
 ## 系统需求
 
@@ -64,7 +64,7 @@ pip install faiss-gpu  # CUDA 启用的 FAISS（需要 NVIDIA GPU）
 
 ### 开发工具
 
-为 Ontomem 做贡献：
+为 OntoMem 做贡献：
 
 ```bash
 uv sync --group dev
@@ -82,7 +82,7 @@ uv sync --group dev
 
 ```python
 from ontomem import OMem, MergeStrategy
-print("✅ Ontomem 安装成功！")
+print("✅ OntoMem 安装成功！")
 ```
 
 或从命令行：
@@ -115,7 +115,7 @@ pip install "langchain>=1.2.1" "langchain-openai>=1.1.6" "langchain-community>=0
 
 ### Pydantic 版本冲突
 
-Ontomem 需要 Pydantic 2.x：
+OntoMem 需要 Pydantic 2.x：
 
 ```bash
 pip install "pydantic>=2.12.5"

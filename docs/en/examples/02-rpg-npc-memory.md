@@ -64,11 +64,11 @@ Results are stored in `temp/npc_memory/`:
 1. **Incremental Updates**: How to progressively build profiles through multiple interactions
 2. **Field-Level Merging**: Merging individual fields while preserving list information
 3. **Relationship Tracking**: Maintaining evolving relationships and reputation
-4. **Game State Integration**: Integrating Ontomem with game systems
+4. **Game State Integration**: Integrating OntoMem with game systems
 
 ## No API Required ✅
 
-This example works without any external API keys or dependencies beyond the core Ontomem package.
+This example works without any external API keys or dependencies beyond the core OntoMem package.
 
 ## Related Concepts
 

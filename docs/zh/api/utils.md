@@ -1,6 +1,6 @@
 # Utils 模块
 
-Ontomem 的实用函数和帮助程序。
+OntoMem 的实用函数和帮助程序。
 
 ## 日志
 

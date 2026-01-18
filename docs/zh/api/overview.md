@@ -1,6 +1,6 @@
 # API 概览
 
-Ontomem 的完整 API 参考。
+OntoMem 的完整 API 参考。
 
 ## 核心类：OMem
 
@@ -253,7 +253,7 @@ memory = OMem(
 
 ```python
 import ontomem
-print(ontomem.__version__)  # 例如 "0.1.2"
+print(ontomem.__version__)  # 例如 "0.1.3"
 ```
 
 ---

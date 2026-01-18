@@ -4,7 +4,7 @@ Learn how to choose and implement the right merge strategy for your use case.
 
 ## Overview
 
-Ontomem supports 6 merge strategies for handling conflicts when updating entities:
+OntoMem supports 6 merge strategies for handling conflicts when updating entities:
 
 | Strategy | Category | Behavior | Use Case |
 |----------|----------|----------|----------|

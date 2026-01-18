@@ -1,6 +1,6 @@
 # User Guide Overview
 
-Learn how to use Ontomem effectively in your projects.
+Learn how to use OntoMem effectively in your projects.
 
 ## Getting Started
 

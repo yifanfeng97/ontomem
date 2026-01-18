@@ -1,12 +1,12 @@
-# 🧠 Ontomem: The Self-Consolidating Memory
+# 🧠 OntoMem: The Self-Consolidating Memory
 
-**Ontomem** is built on the concept of *Ontology Memory*—structured, coherent knowledge representation for AI systems.
+**OntoMem** is built on the concept of *Ontology Memory*—structured, coherent knowledge representation for AI systems.
 
 > **Give your AI agent a "coherent" memory, not just "fragmented" retrieval.**
 
 
 <p align="center">
-  <img src="/assets/fw.png" alt="Ontomem Framework Diagram" width="700" />
+  <img src="/assets/fw.png" alt="OntoMem Framework Diagram" width="700" />
 </p>
 
 [![PyPI version](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
@@ -14,7 +14,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI downloads](https://img.shields.io/pypi/dm/ontomem.svg)](https://pypi.org/project/ontomem/)
 
-Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **Ontomem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms. It automatically consolidates fragmented observations into complete knowledge graph nodes.
+Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **OntoMem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms. It automatically consolidates fragmented observations into complete knowledge graph nodes.
 
 **It doesn't just store data—it continuously "digests" and "organizes" it.**
 
@@ -27,7 +27,7 @@ Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments
 Built on **Pydantic**. All memories are strongly-typed objects. Say goodbye to `{"unknown": "dict"}` hell and embrace IDE autocomplete and type checking.
 
 ### 🔄 Auto-Consolidation
-When you insert different pieces of information about the same entity (same ID) multiple times, Ontomem doesn't create duplicates. It intelligently merges them into a **Golden Record** using configurable strategies (field overrides, list merging, or **LLM-powered intelligent fusion**).
+When you insert different pieces of information about the same entity (same ID) multiple times, OntoMem doesn't create duplicates. It intelligently merges them into a **Golden Record** using configurable strategies (field overrides, list merging, or **LLM-powered intelligent fusion**).
 
 ### 🔍 Hybrid Search
 - **Key-Value Lookup**: O(1) exact entity access
@@ -50,7 +50,7 @@ Build a living profile of contacts, their preferences, skills, and interaction h
 Unify customer/employee records from CRM, email, support tickets, and social media.
 
 ### 🧠 AI Agent Long-Term Memory
-An autonomous agent accumulates experiences and observations—Ontomem keeps them organized and searchable.
+An autonomous agent accumulates experiences and observations—OntoMem keeps them organized and searchable.
 
 ---
 
@@ -90,11 +90,11 @@ print(experience.solutions)  # Auto-merged across all observations!
 
 ---
 
-## 📊 Why Ontomem?
+## 📊 Why OntoMem?
 
-Most memory libraries store **Raw Text** or **Chat History**. Ontomem stores **Consolidated Knowledge**.
+Most memory libraries store **Raw Text** or **Chat History**. OntoMem stores **Consolidated Knowledge**.
 
-| Feature | **Ontomem** 🧠 | **Mem0** / Zep | **LangChain Memory** | **Vector DBs** (Pinecone/Chroma) |
+| Feature | **OntoMem** 🧠 | **Mem0** / Zep | **LangChain Memory** | **Vector DBs** (Pinecone/Chroma) |
 | :--- | :--- | :--- | :--- | :--- |
 | **Core Storage Unit** | ✅ **Structured Objects** (Pydantic) | Text Chunks + Metadata | Raw Chat Logs | Embedding Vectors |
 | **Data "Digestion"** | ✅ **Auto-Consolidation & merging** | Simple Extraction | ❌ Append-only | ❌ Append-only |
@@ -106,7 +106,7 @@ Most memory libraries store **Raw Text** or **Chat History**. Ontomem stores **C
 ### 💡 The "Consolidation" Advantage
 
 - **Traditional RAG**: Stores 50 chunks of "Alice likes apples", "Alice likes bananas". Search returns 50 fragments.
-- **Ontomem**: Merges them into 1 object: `User(name="Alice", likes=["apples", "bananas"])`. Search returns **one complete truth**.
+- **OntoMem**: Merges them into 1 object: `User(name="Alice", likes=["apples", "bananas"])`. Search returns **one complete truth**.
 
 ---
 

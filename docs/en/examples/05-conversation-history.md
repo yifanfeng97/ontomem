@@ -61,7 +61,7 @@ Results are stored in `temp/conversation_memory/`:
 
 ## No API Required ✅
 
-This example works without any external API keys or dependencies beyond the core Ontomem package.
+This example works without any external API keys or dependencies beyond the core OntoMem package.
 
 ## What You'll Learn
 
@@ -69,7 +69,7 @@ This example works without any external API keys or dependencies beyond the core
 2. **Incremental Accumulation**: Building profiles gradually through dialogue
 3. **Context Maintenance**: Keeping track of conversation context
 4. **Preference Tracking**: Recording user preferences and interests
-5. **Dialogue Integration**: Integrating Ontomem with chat systems
+5. **Dialogue Integration**: Integrating OntoMem with chat systems
 
 ## Complexity
 

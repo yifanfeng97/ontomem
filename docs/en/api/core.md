@@ -1,6 +1,6 @@
 # Overview
 
-Ontomem provides a comprehensive, well-structured API for building intelligent memory systems. This section covers the core modules and classes.
+OntoMem provides a comprehensive, well-structured API for building intelligent memory systems. This section covers the core modules and classes.
 
 ## Core Modules
 
