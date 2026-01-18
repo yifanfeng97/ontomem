@@ -1,7 +1,7 @@
 site_name: OntoMem
 site_description: A self-consolidating memory layer for AI agents
 site_author: Yifan Feng
-site_url: https://ontomem.readthedocs.io/
+site_url: https://yifanfeng97.github.io/ontomem/
 
 repo_url: https://github.com/yifanfeng97/ontomem
 repo_name: ontomem

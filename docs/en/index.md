@@ -6,7 +6,7 @@
 
 
 <p align="center">
-  <img src="/assets/fw.png" alt="OntoMem Framework Diagram" width="700" />
+  <img src="assets/fw.png" alt="OntoMem Framework Diagram" width="700" />
 </p>
 
 [![PyPI version](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
