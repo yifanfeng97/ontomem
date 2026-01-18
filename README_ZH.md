@@ -1,10 +1,10 @@
 # 🧠 Ontomem: 自我整合的记忆系统
 
-<center>
+<p align="center">
 
 [English](README.md) | 中文版本
 
-</center>
+</p>
 
 **Ontomem** 构建于*本体记忆*（Ontology Memory）的概念之上——为 AI 系统提供结构化、连贯的知识表示。
 
@@ -14,14 +14,14 @@
   <img src="docs/assets/fw.png" alt="Ontomem Framework Diagram" width="800" />
 </p>
 
-<center>
+<p align="center">
 
 [![PyPI 版本](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI 下载数](https://img.shields.io/pypi/dm/ontomem.svg)](https://pypi.org/project/ontomem/)
 
-</center>
+</p>
 
 
 传统的 RAG（检索增强生成）系统检索文本碎片。**Ontomem** 采用 Pydantic 模式维护**结构化实体**，并通过智能合并算法自动将碎片化的观察融合为完整的知识图谱节点。
@@ -47,7 +47,7 @@
 
 ---
 
-## � Ontomem 与其他记忆库对比
+## 🧠 Ontomem 与其他记忆库对比
 
 大多数记忆库存储的是**原始文本**或**聊天记录**。Ontomem 存储的是**经过整合的知识**。
 
@@ -67,7 +67,7 @@
 
 ---
 
-## �🚀 快速开始
+## 🚀 快速开始
 
 30 秒内构建一个结构化的记忆存储。
 
@@ -270,21 +270,6 @@ new_memory.load("./debug_knowledge")
 
 ---
 
-## � 保存与加载
-
-快照你的完整记忆状态：
-
-```python
-# 保存（结构化数据 → memory.json，向量 → FAISS 索引）
-experience_memory.dump("./debug_knowledge")
-
-# 稍后快速恢复
-new_memory = OMem(...)
-new_memory.load("./debug_knowledge")
-```
-
----
-
 ## 🔧 安装与设置
 
 ### 基础安装
@@ -314,10 +299,6 @@ uv sync --group dev
 - FAISS（用于向量搜索）
 
 </details>
-
----
-
-## 🎯 使用场景
 
 ---
 

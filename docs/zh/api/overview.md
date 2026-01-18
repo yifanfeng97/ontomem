@@ -253,7 +253,7 @@ memory = OMem(
 
 ```python
 import ontomem
-print(ontomem.__version__)  # 例如 "0.1.1"
+print(ontomem.__version__)  # 例如 "0.1.2"
 ```
 
 ---

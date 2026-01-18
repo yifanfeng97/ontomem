@@ -1,10 +1,10 @@
 # 🧠 Ontomem: The Self-Consolidating Memory
 
-<center>
+<p align="center">
 
 [中文版本](README_ZH.md) | English
 
-</center>
+</p>
 
 **Ontomem** is built on the concept of *Ontology Memory*—structured, coherent knowledge representation for AI systems.
 
@@ -14,14 +14,14 @@
   <img src="docs/assets/fw.png" alt="Ontomem Framework Diagram" width="800" />
 </p>
 
-<center>
+<p align="center">
 
 [![PyPI version](https://img.shields.io/pypi/v/ontomem.svg)](https://pypi.org/project/ontomem/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI downloads](https://img.shields.io/pypi/dm/ontomem.svg)](https://pypi.org/project/ontomem/)
 
-</center>
+</p>
 
 Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **Ontomem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms.
 
@@ -53,7 +53,7 @@ Save your complete memory state (structured data + vector indices) to disk and r
 
 ---
 
-## � Ontomem vs. Other Memory Systems
+## 🧠 Ontomem vs. Other Memory Systems
 
 Most memory libraries store **Raw Text** or **Chat History**. Ontomem stores **Consolidated Knowledge**.
 
@@ -73,7 +73,7 @@ Most memory libraries store **Raw Text** or **Chat History**. Ontomem stores **C
 
 ---
 
-## �🚀 Quick Start
+## 🚀 Quick Start
 
 Build a structured memory store in 30 seconds.
 
@@ -275,7 +275,7 @@ new_memory.load("./researcher_knowledge")
 
 ---
 
-## � Installation & Setup
+## 🔧 Installation & Setup
 
 ### Basic Installation
 
@@ -304,10 +304,6 @@ uv sync --group dev
 - FAISS (for vector search)
 
 </details>
-
----
-
-## 🎯 Use Cases
 
 ---
 

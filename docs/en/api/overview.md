@@ -253,7 +253,7 @@ Check version:
 
 ```python
 import ontomem
-print(ontomem.__version__)  # e.g., "0.1.1"
+print(ontomem.__version__)  # e.g., "0.1.2"
 ```
 
 ---
