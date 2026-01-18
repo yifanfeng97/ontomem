@@ -17,14 +17,14 @@ theme:
   language: en
   palette:
     - scheme: light
-      primary: indigo
-      accent: blue
+      primary: purple
+      accent: deep purple
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: dark
-      primary: indigo
-      accent: blue
+      primary: deep purple
+      accent: purple
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
