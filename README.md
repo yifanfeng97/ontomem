@@ -1,4 +1,4 @@
-# 🧠 Ontomem: The Self-Consolidating Memory
+# 🧠 OntoMem: The Self-Consolidating Memory
 
 <div align="center">
 
@@ -6,12 +6,12 @@
 
 </div>
 
-**Ontomem** is built on the concept of *Ontology Memory*—structured, coherent knowledge representation for AI systems.
+**OntoMem** is built on the concept of *Ontology Memory*—structured, coherent knowledge representation for AI systems.
 
 > **Give your AI agent a "coherent" memory, not just "fragmented" retrieval.**
 
 <p align="center">
-  <img src="docs/assets/fw.png" alt="Ontomem Framework Diagram" width="800" />
+  <img src="docs/assets/fw.png" alt="OntoMem Framework Diagram" width="800" />
 </p>
 
 <div align="center">
@@ -24,7 +24,7 @@
 
 </div>
 
-Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **Ontomem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms.
+Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **OntoMem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms.
 
 It excels at **Time-Series Consolidation**: effortlessly merging streaming observations (like logs or chat turns) into coherent "Daily Snapshots" or "Session Summaries" simply by defining a composite key (e.g., `user_id + date`).
 
@@ -32,18 +32,18 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
 
 ---
 
-## ✨ Why Ontomem?
+## ✨ Why OntoMem?
 
 ### 🧩 Schema-First & Type-Safe
 Built on **Pydantic**. All memories are strongly-typed objects. Say goodbye to `{"unknown": "dict"}` hell and embrace IDE autocomplete and type checking.
 
 ### ⏱️ Temporal Consolidation (Time-Slicing)
-Ontomem isn't just about ID deduplication. By using **Composite Keys** (e.g., `lambda x: f"{x.user}_{x.date}"`), you can automatically aggregate a day's worth of fragmented events into a **Single Daily Record**.
+OntoMem isn't just about ID deduplication. By using **Composite Keys** (e.g., `lambda x: f"{x.user}_{x.date}"`), you can automatically aggregate a day's worth of fragmented events into a **Single Daily Record**.
 - **Input**: 1,000 fragmented logs/observations throughout the day.
 - **Output**: 1 structured, LLM-synthesized "Daily Summary" object.
 
 ### 🔄 Auto-Evolution
-When you insert new data about an existing entity, Ontomem doesn't create duplicates. It intelligently merges them into a **Golden Record** using configurable strategies (Conflict Resolution, List Appending, or **LLM-powered Synthesis**).
+When you insert new data about an existing entity, OntoMem doesn't create duplicates. It intelligently merges them into a **Golden Record** using configurable strategies (Conflict Resolution, List Appending, or **LLM-powered Synthesis**).
 
 ### 🔍 Hybrid Search
 - **Key-Value Lookup**: O(1) exact access (e.g., "Get me Alice's summary for 2024-01-01").
@@ -54,11 +54,11 @@ Save your complete memory state (structured data + vector indices) to disk and r
 
 ---
 
-## 🧠 Ontomem vs. Other Memory Systems
+## 🧠 OntoMem vs. Other Memory Systems
 
-Most memory libraries store **Raw Text** or **Chat History**. Ontomem stores **Consolidated Knowledge**.
+Most memory libraries store **Raw Text** or **Chat History**. OntoMem stores **Consolidated Knowledge**.
 
-| Feature | **Ontomem** 🧠 | **Mem0** / Zep | **LangChain Memory** | **Vector DBs** (Pinecone/Chroma) |
+| Feature | **OntoMem** 🧠 | **Mem0** / Zep | **LangChain Memory** | **Vector DBs** (Pinecone/Chroma) |
 | :--- | :--- | :--- | :--- | :--- |
 | **Core Storage Unit** | ✅ **Structured Objects** (Pydantic) | Text Chunks + Metadata | Raw Chat Logs | Embedding Vectors |
 | **Data "Digestion"** | ✅ **Auto-Consolidation & merging** | Simple Extraction | ❌ Append-only | ❌ Append-only |
@@ -70,7 +70,7 @@ Most memory libraries store **Raw Text** or **Chat History**. Ontomem stores **C
 ### 💡 The "Consolidation" Advantage
 
 - **Traditional RAG**: Stores 50 chunks of "Alice likes apples", "Alice likes bananas". Search returns 50 fragments.
-- **Ontomem**: Merges them into 1 object: `User(name="Alice", likes=["apples", "bananas"])`. Search returns **one complete truth**.
+- **OntoMem**: Merges them into 1 object: `User(name="Alice", likes=["apples", "bananas"])`. Search returns **one complete truth**.
 
 ---
 
@@ -99,7 +99,7 @@ memory = OMem(
 
 ### 2. Add & Merge (Auto-Consolidation)
 
-Ontomem automatically merges data for the same ID.
+OntoMem automatically merges data for the same ID.
 
 ```python
 # First observation

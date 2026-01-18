@@ -1,4 +1,4 @@
-# 🧠 Ontomem: 自我整合的记忆系统
+# 🧠 OntoMem: 自我整合的记忆系统
 
 <div align="center">
 
@@ -6,12 +6,12 @@
 
 </div>
 
-**Ontomem** 构建于*本体记忆*（Ontology Memory）的概念之上——为 AI 系统提供结构化、连贯的知识表示。
+**OntoMem** 构建于*本体记忆*（Ontology Memory）的概念之上——为 AI 系统提供结构化、连贯的知识表示。
 
 > **让你的 AI 智能体拥有"连贯"的记忆，而不仅仅是"碎片"的检索。**
 
 <p align="center">
-  <img src="docs/assets/fw.png" alt="Ontomem Framework Diagram" width="800" />
+  <img src="docs/assets/fw.png" alt="OntoMem Framework Diagram" width="800" />
 </p>
 
 <div align="center">
@@ -23,19 +23,19 @@
 </div>
 
 
-传统的 RAG（检索增强生成）系统检索文本碎片。**Ontomem** 采用 Pydantic 模式维护**结构化实体**，并通过智能合并算法自动将碎片化的观察融合为完整的知识图谱节点。
+传统的 RAG（检索增强生成）系统检索文本碎片。**OntoMem** 采用 Pydantic 模式维护**结构化实体**，并通过智能合并算法自动将碎片化的观察融合为完整的知识图谱节点。
 
 **它不仅仅存储数据——它持续"消化"和"组织"数据。**
 
 ---
 
-## ✨ 为什么选择 Ontomem？
+## ✨ 为什么选择 OntoMem？
 
 ### 🧩 Schema-First（模式优先）& 类型安全
 基于 **Pydantic** 构建。所有记忆都是强类型对象。告别 `{"unknown": "dict"}` 的地狱，拥抱 IDE 自动补全和类型检查。
 
 ### 🔄 自动整合（Auto-Consolidation）
-当你多次插入关于同一实体（相同 ID）的不同信息时，Ontomem 不会创建重复记录。它使用可配置的策略（字段覆盖、列表合并或 **LLM 驱动的智能融合**）将其智能合并为一条**黄金记录**。
+当你多次插入关于同一实体（相同 ID）的不同信息时，OntoMem 不会创建重复记录。它使用可配置的策略（字段覆盖、列表合并或 **LLM 驱动的智能融合**）将其智能合并为一条**黄金记录**。
 
 ### 🔍 混合搜索（Hybrid Search）
 - **键值查询**：O(1) 精确实体访问
@@ -46,11 +46,11 @@
 
 ---
 
-## 🧠 Ontomem 与其他记忆库对比
+## 🧠 OntoMem 与其他记忆库对比
 
-大多数记忆库存储的是**原始文本**或**聊天记录**。Ontomem 存储的是**经过整合的知识**。
+大多数记忆库存储的是**原始文本**或**聊天记录**。OntoMem 存储的是**经过整合的知识**。
 
-| 特性 | **Ontomem** 🧠 | **Mem0** / Zep | **LangChain Memory** | **向量数据库** (Pinecone/Chroma) |
+| 特性 | **OntoMem** 🧠 | **Mem0** / Zep | **LangChain Memory** | **向量数据库** (Pinecone/Chroma) |
 | :--- | :--- | :--- | :--- | :--- |
 | **核心存储单元** | ✅ **结构化对象** (Pydantic) | 文本切片 + 元数据 | 原始对话日志 | 向量 Embeddings |
 | **数据"消化"能力** | ✅ **自动整合与逻辑合并** | 简单抽取 | ❌ 仅追加 (Append-only) | ❌ 仅追加 |
@@ -62,7 +62,7 @@
 ### 💡 "自动整合"的优势
 
 - **传统 RAG/Memory**: 存储 50 条零散记录（如"Alice 喜欢苹果"、"Alice 喜欢香蕉"）。检索时返回 50 个碎片。
-- **Ontomem**: 将其"消化"为 1 个对象：`User(name="Alice", likes=["苹果", "香蕉"])`。检索时返回**唯一的完整事实**。
+- **OntoMem**: 将其"消化"为 1 个对象：`User(name="Alice", likes=["苹果", "香蕉"])`。检索时返回**唯一的完整事实**。
 
 ---
 
@@ -91,7 +91,7 @@ memory = OMem(
 
 ### 2. 添加 & 合并（自动合并）
 
-Ontomem 自动为相同 ID 的数据进行合并。
+OntoMem 自动为相同 ID 的数据进行合并。
 
 ```python
 # 第一条观察
