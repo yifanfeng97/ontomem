@@ -47,114 +47,150 @@
 
 ---
 
-## 🚀 快速开始：构建"自我进化"的经验库
+## 🚀 快速开始
 
-想象一个 AI 调试智能体。没有记忆时，它每次都重复相同的试错过程。有了 **Ontomem**，它构建一份持久的**"调试手册"**，随着遇到的每个新问题而进化。
+30 秒内构建一个结构化的记忆存储。
 
-### 1. 定义你的经验模式
+### 1. 定义 & 初始化
 
 ```python
 from pydantic import BaseModel
-from typing import List, Optional
+from ontomem import OMem
 
-class BugFixExperience(BaseModel):
-    """一份活动的调试知识记录。"""
-    error_signature: str            # 键：例如 "ModuleNotFoundError: pandas"
-    root_causes: List[str]          # 这个错误可能发生的不同原因
-    solutions: List[str]            # 发现的多个解决方案
-    prevention_tips: str            # 综合理解如何避免此问题
-    last_updated: Optional[str] = None
+# 1. 定义你的记忆 schema
+class UserProfile(BaseModel):
+    name: str
+    skills: list[str]
+    last_seen: str
+
+# 2. 初始化（简单模式）
+memory = OMem(
+    memory_schema=UserProfile,
+    key_extractor=lambda x: x.name  # 唯一 ID
+)
 ```
 
-### 2. 初始化带有 LLM 驱动合并的 Ontomem
+### 2. 添加 & 合并（自动合并）
 
-我们使用 `LLM.BALANCED` 策略，这样 Ontomem 不仅列出解决方案——它**综合**它们成为连贯、可行的指导。
+Ontomem 自动为相同 ID 的数据进行合并。
+
+```python
+# 第一条观察
+memory.add(UserProfile(name="Alice", skills=["Python"], last_seen="10:00"))
+
+# 之后的观察（新增了技能，时间更新）
+memory.add(UserProfile(name="Alice", skills=["Docker"], last_seen="11:00"))
+
+# 获取合并后的"黄金记录"
+alice = memory.get("Alice")
+print(alice.skills)     # ['Python', 'Docker']（列表已合并！）
+print(alice.last_seen)  # "11:00"（已更新！）
+```
+
+### 3. 搜索 & 检索
+
+```python
+# 精确检索
+profile = memory.get("Alice")
+
+# 所有 key
+all_keys = memory.keys
+
+# 清空或删除
+memory.remove("Alice")
+```
+
+---
+
+## 💡 高级示例
+
+<details>
+<summary><b>示例 1：自我优化的调试智者（逻辑演进）</b></summary>
+
+一个 AI 智能体不仅存储错误，还利用 `LLM.BALANCED` 策略随时间**合成**调试智慧。
 
 ```python
 from ontomem import OMem, MergeStrategy
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
-experience_memory = OMem(
+class BugFixExperience(BaseModel):
+    error_signature: str
+    solutions: list[str]
+    prevention_tips: str
+
+memory = OMem(
     memory_schema=BugFixExperience,
     key_extractor=lambda x: x.error_signature,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
     merge_strategy=MergeStrategy.LLM.BALANCED
 )
-```
 
-### 3. 智能体随时间学习
-
-#### 第 1 天：首次遭遇
-智能体遇到 pandas 的 `ModuleNotFoundError`，用 `pip install` 修复。
-
-```python
-# 经验 1：初始观察
-experience_memory.add(BugFixExperience(
-    error_signature="ModuleNotFoundError: No module named 'pandas'",
-    root_causes=["环境中缺少库"],
-    solutions=["运行: pip install pandas"],
-    prevention_tips="运行代码前始终检查 requirements.txt。"
+# 第一天：Pip 安装
+memory.add(BugFixExperience(
+    error_signature="ModuleNotFoundError: pandas",
+    solutions=["pip install pandas"],
+    prevention_tips="检查 requirements.txt"
 ))
-```
 
-#### 第 2 天：新环境，不同解决方案
-智能体在 Docker 容器中遇到同样错误，但 pip 失败，系统包管理器 `apt-get install python3-pandas` 成功。
-
-```python
-# 经验 2：不同环境，相同错误
-experience_memory.add(BugFixExperience(
-    error_signature="ModuleNotFoundError: No module named 'pandas'",
-    root_causes=["系统 Python 中不存在包", "pip 的二进制不兼容性"],
-    solutions=["运行: apt-get install python3-pandas", "在容器中使用系统包管理器"],
-    prevention_tips="在容器化环境中，对编译依赖优先使用系统包。"
+# 第二天：Docker 容器（不同的解决方案！）
+memory.add(BugFixExperience(
+    error_signature="ModuleNotFoundError: pandas",
+    solutions=["apt-get install python3-pandas"],  # 添加到列表！
+    prevention_tips="在容器中使用系统包"  # LLM 合并两条提示
 ))
-```
 
-#### 第 3 天：智能体寻求智慧
-当新的智能体实例遇到同样错误时，它查询进化的知识库：
-
-```python
-# 检索综合智慧
-guidance = experience_memory.get("ModuleNotFoundError: No module named 'pandas'")
-
-print("根本原因:")
-for cause in guidance.root_causes:
-    print(f"  - {cause}")
-# 输出：
-#   - 环境中缺少库
-#   - 系统 Python 中不存在包
-#   - pip 的二进制不兼容性
-
-print("\n解决方案:")
-for i, solution in enumerate(guidance.solutions, 1):
-    print(f"  {i}. {solution}")
-# 输出：
-#   1. 运行: pip install pandas（标准方法）
-#   2. 运行: apt-get install python3-pandas（系统 Python）
-#   3. 在容器中使用系统包管理器
-
-print("\n预防提示:")
+# 结果：单条记录，包含合并的解决方案 + 合成的建议
+guidance = memory.get("ModuleNotFoundError: pandas")
 print(guidance.prevention_tips)
-# 输出: "运行代码前检查 requirements.txt。
-#       在容器中，对编译依赖优先使用系统包。
-#       考虑使用虚拟环境隔离依赖。"
+# >>> "在标准环境中，检查 requirements.txt。
+#      在容器化环境中，更倾向使用系统包..."
 ```
 
-#### 第 4 天：语义搜索类似问题
-智能体不记得确切的错误，但可以按概念搜索：
+</details>
+
+<details>
+<summary><b>示例 2：时序记忆 & 日汇总（时间序列）</b></summary>
+
+使用**组合键**将一系列碎片化事件转化为单条"日汇总"记录。
 
 ```python
-# 语义搜索：查找与导入相关的问题
-similar_issues = experience_memory.search(
-    "Python 模块导入失败 依赖缺失",
-    k=5
+from ontomem import OMem, MergeStrategy
+
+class DailyTrace(BaseModel):
+    user: str
+    date: str
+    actions: list[str]  # 累积整天的操作
+    summary: str        # LLM 合成整天的概括
+
+memory = OMem(
+    memory_schema=DailyTrace,
+    key_extractor=lambda x: f"{x.user}_{x.date}",  # <-- 神奇的键
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    merge_strategy=MergeStrategy.LLM.BALANCED
 )
 
-print(f"找到 {len(similar_issues)} 个相关的调试经验")
+# 上午 9:00 事件
+memory.add(DailyTrace(user="Alice", date="2024-01-01", actions=["Login"]))
+
+# 下午 5:00 事件（同一天 → 合并到相同记录）
+memory.add(DailyTrace(user="Alice", date="2024-01-01", actions=["Logout"]))
+
+# 第二天（新日期 → 新记录）
+memory.add(DailyTrace(user="Alice", date="2024-01-02", actions=["Login"]))
+
+# 结果：
+# - alice_2024-01-01: actions=["Login", "Logout"], summary="活跃交易日..."
+# - alice_2024-01-02: actions=["Login"], summary="简短会话..."
+
+# 跨时间的语义搜索
+results = memory.search("Alice 什么时候感到沮丧？", k=1)
 ```
 
-**智能体从"试错"进化到"明智决策"。无需样板代码。无需手动整合。只需添加经验，让 Ontomem 综合智慧。**
+完整的工作示例，见 [examples/06_temporal_memory_consolidation.py](examples/06_temporal_memory_consolidation.py)
+
+</details>
 
 ---
 
@@ -269,81 +305,6 @@ uv sync --group dev
 - LangChain（用于 LLM 集成）
 - Pydantic（用于模式定义）
 - FAISS（用于向量搜索）
-
----
-
-## 📚 API 参考
-
-### 核心方法
-
-#### `add(items: Union[T, List[T]]) → None`
-添加项目到记忆。自动按键合并重复项。
-
-```python
-experience_memory.add(BugFixExperience(...))
-experience_memory.add([exp1, exp2, exp3])
-```
-
-#### `get(key: Any) → Optional[T]`
-按键检索实体。
-
-```python
-experience = experience_memory.get("ModuleNotFoundError: pandas")
-```
-
-#### `build_index(force: bool = False) → None`
-为语义搜索构建或重建向量索引。
-
-```python
-experience_memory.build_index()  # 如果干净则构建
-experience_memory.build_index(force=True)  # 强制重建
-```
-
-#### `search(query: str, k: int = 5) → List[T]`
-在所有实体上进行语义搜索。
-
-```python
-results = experience_memory.search("依赖管理错误", k=10)
-```
-
-#### `dump(folder_path: Union[str, Path]) → None`
-将记忆状态（数据 + 索引）保存到磁盘。
-
-```python
-experience_memory.dump("./my_knowledge")
-```
-
-#### `load(folder_path: Union[str, Path]) → None`
-从磁盘加载记忆状态。
-
-```python
-experience_memory.load("./my_knowledge")
-```
-
-#### `remove(key: Any) → bool`
-按键删除实体。
-
-```python
-success = experience_memory.remove("ModuleNotFoundError: pandas")
-```
-
-#### `clear() → None`
-清除所有实体和索引。
-
-```python
-experience_memory.clear()
-```
-
-### 属性
-
-#### `keys: List[Any]`
-记忆中的所有唯一键。
-
-#### `items: List[T]`
-所有实体实例。
-
-#### `size: int`
-实体数量。
 
 ---
 

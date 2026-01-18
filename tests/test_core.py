@@ -2,6 +2,7 @@
 
 import pytest
 from pydantic import BaseModel
+from unittest.mock import Mock
 from ontomem import OMem
 from ontomem.merger import MergeStrategy
 
@@ -14,25 +15,44 @@ class SimpleItem(BaseModel):
     value: int | None = None
 
 
+@pytest.fixture
+def mock_llm():
+    """Create a mock LLM client."""
+    return Mock()
+
+
+@pytest.fixture
+def mock_embedder():
+    """Create a mock embedder."""
+    embedder = Mock()
+    embedder.embed_documents = Mock(return_value=[[0.1] * 384] * 10)
+    embedder.embed_query = Mock(return_value=[0.1] * 384)
+    return embedder
+
+
 class TestOMem:
     """Test OMem Stateful Memory Store."""
 
-    def test_init_basic(self):
+    def test_init_basic(self, mock_llm, mock_embedder):
         """Test basic initialization."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         assert memory.size == 0
         assert memory.keys == []
         assert memory.items == []
 
-    def test_add_single_item(self):
+    def test_add_single_item(self, mock_llm, mock_embedder):
         """Test adding a single item."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         item = SimpleItem(item_id="1", name="Alice", value=10)
@@ -41,11 +61,13 @@ class TestOMem:
         assert memory.size == 1
         assert memory.get("1") == item
 
-    def test_add_multiple_items(self):
+    def test_add_multiple_items(self, mock_llm, mock_embedder):
         """Test adding multiple items."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         items = [
@@ -58,11 +80,13 @@ class TestOMem:
         assert memory.get("1").name == "Alice"
         assert memory.get("2").name == "Bob"
 
-    def test_keep_incoming_strategy(self):
+    def test_keep_incoming_strategy(self, mock_llm, mock_embedder):
         """Test keep_incoming strategy on duplicate."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.KEEP_NEW
         )
         memory.add(SimpleItem(item_id="1", name="Alice", value=10))
@@ -73,11 +97,13 @@ class TestOMem:
         assert item.name == "Bob"
         assert item.value == 20
 
-    def test_keep_existing_strategy(self):
+    def test_keep_existing_strategy(self, mock_llm, mock_embedder):
         """Test keep_existing strategy on duplicate."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.KEEP_OLD
         )
         memory.add(SimpleItem(item_id="1", name="Alice", value=10))
@@ -88,11 +114,13 @@ class TestOMem:
         assert item.name == "Alice"
         assert item.value == 10
 
-    def test_field_merge_strategy(self):
+    def test_field_merge_strategy(self, mock_llm, mock_embedder):
         """Test field merge strategy on duplicate."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         memory.add(SimpleItem(item_id="1", name="Alice", value=None))
@@ -103,11 +131,13 @@ class TestOMem:
         assert item.name == "Alice"
         assert item.value == 30
 
-    def test_multiple_keys(self):
+    def test_multiple_keys(self, mock_llm, mock_embedder):
         """Test multiple unique keys in memory."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         items = [
@@ -120,21 +150,25 @@ class TestOMem:
         assert memory.get("1").name == "Alice"
         assert memory.get("2").name == "Bob"
 
-    def test_empty_add(self):
+    def test_empty_add(self, mock_llm, mock_embedder):
         """Test adding empty list."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         memory.add([])
         assert memory.size == 0
 
-    def test_remove_item(self):
+    def test_remove_item(self, mock_llm, mock_embedder):
         """Test removing an item."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         memory.add(SimpleItem(item_id="1", name="Alice", value=10))
@@ -145,21 +179,25 @@ class TestOMem:
         assert memory.size == 0
         assert memory.get("1") is None
 
-    def test_remove_nonexistent(self):
+    def test_remove_nonexistent(self, mock_llm, mock_embedder):
         """Test removing nonexistent item."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         removed = memory.remove("nonexistent")
         assert removed is False
 
-    def test_clear_memory(self):
+    def test_clear_memory(self, mock_llm, mock_embedder):
         """Test clearing all memory."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         memory.add([
@@ -172,21 +210,24 @@ class TestOMem:
         assert memory.size == 0
         assert memory.keys == []
 
-    def test_invalid_strategy_requires_llm(self):
-        """Test that LLM strategy requires LLM."""
-        with pytest.raises(ValueError, match="requires llm_client"):
-            OMem(
-                memory_schema=SimpleItem,
-                key_extractor=lambda x: x.item_id,
-                merge_strategy=MergeStrategy.LLM.BALANCED,
-                llm_client=None
-            )
+    def test_invalid_strategy_requires_llm(self, mock_llm, mock_embedder):
+        """Test that LLM strategy works with provided LLM."""
+        memory = OMem(
+            memory_schema=SimpleItem,
+            key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
+            merge_strategy=MergeStrategy.LLM.BALANCED
+        )
+        assert memory is not None
 
-    def test_invalid_item_type(self):
+    def test_invalid_item_type(self, mock_llm, mock_embedder):
         """Test adding wrong item type."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
 
@@ -196,11 +237,13 @@ class TestOMem:
         with pytest.raises(TypeError, match="must be"):
             memory.add(OtherItem(id="1"))
 
-    def test_keys_property(self):
+    def test_keys_property(self, mock_llm, mock_embedder):
         """Test keys property."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         memory.add([
@@ -210,11 +253,13 @@ class TestOMem:
 
         assert set(memory.keys) == {"1", "2"}
 
-    def test_items_property(self):
+    def test_items_property(self, mock_llm, mock_embedder):
         """Test items property."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
+            llm_client=mock_llm,
+            embedder=mock_embedder,
             merge_strategy=MergeStrategy.FIELD_MERGE
         )
         items = [

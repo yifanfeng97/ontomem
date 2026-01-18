@@ -13,7 +13,7 @@ site_dir: site
 theme:
   name: material
   logo: assets/logo.png
-  favicon: assets/favicon.png
+  favicon: assets/logo.png
   language: en
   palette:
     - scheme: light
@@ -41,8 +41,7 @@ theme:
     - toc.follow
 
 plugins:
-  - search:
-      lang: en
+  - search
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -53,6 +52,36 @@ plugins:
             show_root_heading: true
             show_root_full_path: false
             separate_signature: true
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: en
+          name: English
+          default: true
+          build: true
+        - locale: zh
+          name: 简体中文
+          build: true
+          nav:
+            - 首页: zh/index.md
+            - 开始使用:
+              - 快速开始: zh/quick-start.md
+              - 安装: zh/installation.md
+              - 基本概念: zh/basic-concepts.md
+            - 用户指南:
+              - 概述: zh/user-guide/overview.md
+              - 合并策略: zh/user-guide/merge-strategies.md
+              - 搜索功能: zh/user-guide/search-capabilities.md
+              - 持久化: zh/user-guide/persistence.md
+              - 高级用法: zh/user-guide/advanced-usage.md
+            - API 参考:
+              - 概述: zh/api/overview.md
+              - 核心: zh/api/core.md
+              - 合并器: zh/api/merger.md
+              - 工具: zh/api/utils.md
+            - 示例: zh/examples/examples-overview.md
+            - 常见问题: zh/faq.md
+            - 贡献指南: zh/contributing.md
 
 nav:
   - Home: en/index.md
@@ -74,6 +103,8 @@ nav:
   - Examples: en/examples/examples-overview.md
   - FAQ: en/faq.md
   - Contributing: en/contributing.md
+
+
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -102,12 +133,5 @@ extra:
       link: https://github.com/yifanfeng97/ontomem
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/ontomem/
-  alternate:
-    - name: English
-      lang: en
-      link: /en/
-    - name: 中文
-      lang: zh
-      link: /zh/
 
 copyright: Copyright &copy; 2026-2036 Yifan Feng

@@ -23,7 +23,9 @@
 
 </center>
 
-Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **Ontomem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms. It automatically consolidates fragmented observations into complete knowledge graph nodes.
+Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments. **Ontomem** maintains **structured entities** using Pydantic schemas and intelligent merging algorithms.
+
+It excels at **Time-Series Consolidation**: effortlessly merging streaming observations (like logs or chat turns) into coherent "Daily Snapshots" or "Session Summaries" simply by defining a composite key (e.g., `user_id + date`).
 
 **It doesn't just store data—it continuously "digests" and "organizes" it.**
 
@@ -34,126 +36,167 @@ Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments
 ### 🧩 Schema-First & Type-Safe
 Built on **Pydantic**. All memories are strongly-typed objects. Say goodbye to `{"unknown": "dict"}` hell and embrace IDE autocomplete and type checking.
 
-### 🔄 Auto-Consolidation
-When you insert different pieces of information about the same entity (same ID) multiple times, Ontomem doesn't create duplicates. It intelligently merges them into a **Golden Record** using configurable strategies (field overrides, list merging, or **LLM-powered intelligent fusion**).
+### ⏱️ Temporal Consolidation (Time-Slicing)
+Ontomem isn't just about ID deduplication. By using **Composite Keys** (e.g., `lambda x: f"{x.user}_{x.date}"`), you can automatically aggregate a day's worth of fragmented events into a **Single Daily Record**.
+- **Input**: 1,000 fragmented logs/observations throughout the day.
+- **Output**: 1 structured, LLM-synthesized "Daily Summary" object.
+
+### 🔄 Auto-Evolution
+When you insert new data about an existing entity, Ontomem doesn't create duplicates. It intelligently merges them into a **Golden Record** using configurable strategies (Conflict Resolution, List Appending, or **LLM-powered Synthesis**).
 
 ### 🔍 Hybrid Search
-- **Key-Value Lookup**: O(1) exact entity access
-- **Vector Search**: Built-in FAISS indexing for semantic similarity search, automatically synced
+- **Key-Value Lookup**: O(1) exact access (e.g., "Get me Alice's summary for 2024-01-01").
+- **Vector Search**: Semantic similarity search across your entire timeline (e.g., "When was Alice frustrated?").
 
 ### 💾 Stateful & Persistent
 Save your complete memory state (structured data + vector indices) to disk and restore it in seconds on next startup.
 
 ---
 
-## 🚀 Quick Start: Building a "Self-Improving" Experience Library
+## 🚀 Quick Start
 
-Imagine an AI coding agent that debugs issues. Without memory, it repeats the same trial-and-error process every time. With **Ontomem**, it builds a persistent **"Debugging Playbook"** that evolves with each new problem encountered.
+Build a structured memory store in 30 seconds.
 
-### 1. Define Your Experience Schema
+### 1. Define & Initialize
 
 ```python
 from pydantic import BaseModel
-from typing import List, Optional
+from ontomem import OMem
 
-class BugFixExperience(BaseModel):
-    """A living record of debugging knowledge."""
-    error_signature: str            # Key: e.g., "ModuleNotFoundError: pandas"
-    root_causes: List[str]          # Different reasons this error can occur
-    solutions: List[str]            # Multiple working solutions discovered
-    prevention_tips: str            # Synthesized understanding of how to avoid it
-    last_updated: Optional[str] = None
+# 1. Define your memory schema
+class UserProfile(BaseModel):
+    name: str
+    skills: list[str]
+    last_seen: str
+
+# 2. Initialize (Simple mode)
+memory = OMem(
+    memory_schema=UserProfile,
+    key_extractor=lambda x: x.name  # Unique ID
+)
 ```
 
-### 2. Initialize with LLM-Powered Merging
+### 2. Add & Merge (Auto-Consolidation)
 
-We use the `LLM.BALANCED` strategy so Ontomem doesn't just list solutions—it **synthesizes** them into coherent, actionable guidance.
+Ontomem automatically merges data for the same ID.
+
+```python
+# First observation
+memory.add(UserProfile(name="Alice", skills=["Python"], last_seen="10:00"))
+
+# Later observation (New skill added, time updated)
+memory.add(UserProfile(name="Alice", skills=["Docker"], last_seen="11:00"))
+
+# Retrieve the consolidated "Golden Record"
+alice = memory.get("Alice")
+print(alice.skills)     # ['Python', 'Docker'] (Lists merged!)
+print(alice.last_seen)  # "11:00" (Updated!)
+```
+
+### 3. Search & Retrieve
+
+```python
+# Exact retrieval
+profile = memory.get("Alice")
+
+# All keys in memory
+all_keys = memory.keys
+
+# Clear or remove
+memory.remove("Alice")
+```
+
+---
+
+## 💡 Advanced Examples
+
+<details>
+<summary><b>Example 1: The "Self-Improving" Debugger (Logic Evolution)</b></summary>
+
+An AI agent that doesn't just store errors—it **synthesizes** debugging wisdom over time using `LLM.BALANCED` strategy.
 
 ```python
 from ontomem import OMem, MergeStrategy
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
-experience_memory = OMem(
+class BugFixExperience(BaseModel):
+    error_signature: str
+    solutions: list[str]
+    prevention_tips: str
+
+memory = OMem(
     memory_schema=BugFixExperience,
     key_extractor=lambda x: x.error_signature,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
     merge_strategy=MergeStrategy.LLM.BALANCED
 )
-```
 
-### 3. The Agent Learns Over Time
-
-#### Day 1: The First Encounter
-The agent encounters `ModuleNotFoundError` for pandas and fixes it with `pip install`.
-
-```python
-# Experience 1: Initial observation
-experience_memory.add(BugFixExperience(
-    error_signature="ModuleNotFoundError: No module named 'pandas'",
-    root_causes=["Missing library in environment"],
-    solutions=["Run: pip install pandas"],
-    prevention_tips="Always check requirements.txt before running code."
+# Day 1: Pip install
+memory.add(BugFixExperience(
+    error_signature="ModuleNotFoundError: pandas",
+    solutions=["pip install pandas"],
+    prevention_tips="Check requirements.txt"
 ))
-```
 
-#### Day 2: New Context, Different Fix
-The agent encounters the same error in a Docker container where pip fails, but `apt-get install python3-pandas` works.
-
-```python
-# Experience 2: Different context, same error
-experience_memory.add(BugFixExperience(
-    error_signature="ModuleNotFoundError: No module named 'pandas'",
-    root_causes=["Package not in system Python", "Binary incompatibility with pip"],
-    solutions=["Run: apt-get install python3-pandas", "Use system package manager in containers"],
-    prevention_tips="In containerized environments, prefer system packages for compiled dependencies."
+# Day 2: Docker container (Different solution!)
+memory.add(BugFixExperience(
+    error_signature="ModuleNotFoundError: pandas",
+    solutions=["apt-get install python3-pandas"],  # Added to list!
+    prevention_tips="Use system packages in containers"  # LLM merges both tips
 ))
-```
 
-#### Day 3: Agent Seeks Wisdom
-When a new agent instance encounters the same error, it queries the evolved knowledge base:
-
-```python
-# Retrieve consolidated wisdom
-guidance = experience_memory.get("ModuleNotFoundError: No module named 'pandas'")
-
-print("Root Causes:")
-for cause in guidance.root_causes:
-    print(f"  - {cause}")
-# Output:
-#   - Missing library in environment
-#   - Package not in system Python
-#   - Binary incompatibility with pip
-
-print("\nSolutions:")
-for i, solution in enumerate(guidance.solutions, 1):
-    print(f"  {i}. {solution}")
-# Output:
-#   1. Run: pip install pandas (standard approach)
-#   2. Run: apt-get install python3-pandas (for system Python)
-#   3. Use system package manager in containers
-
-print("\nPrevention Tips:")
+# Result: Single record with merged solutions + synthesized advice
+guidance = memory.get("ModuleNotFoundError: pandas")
 print(guidance.prevention_tips)
-# Output: "Check requirements.txt before running code. 
-#         In containers, prefer system packages for compiled dependencies.
-#         Consider using virtual environments to isolate dependencies."
+# >>> "In standard environments, check requirements.txt. 
+#      In containerized environments, prefer system packages..."
 ```
 
-#### Day 4: Semantic Search for Similar Problems
-The agent doesn't remember the exact error, but can search by concept:
+</details>
+
+<details>
+<summary><b>Example 2: Temporal Memory & Daily Consolidation (Time-Series)</b></summary>
+
+Turn a stream of fragmented events into a single "Daily Summary" record using **Composite Keys**.
 
 ```python
-# Semantic search: Find solutions for import-related issues
-similar_issues = experience_memory.search(
-    "Python module import failures dependency missing",
-    k=5
+from ontomem import OMem, MergeStrategy
+
+class DailyTrace(BaseModel):
+    user: str
+    date: str
+    actions: list[str]  # Accumulates all day
+    summary: str        # LLM synthesizes entire day
+
+memory = OMem(
+    memory_schema=DailyTrace,
+    key_extractor=lambda x: f"{x.user}_{x.date}",  # <-- THE MAGIC KEY
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    merge_strategy=MergeStrategy.LLM.BALANCED
 )
 
-print(f"Found {len(similar_issues)} related debugging experiences")
+# 9:00 AM event
+memory.add(DailyTrace(user="Alice", date="2024-01-01", actions=["Login"]))
+
+# 5:00 PM event (Same day → Merges into SAME record)
+memory.add(DailyTrace(user="Alice", date="2024-01-01", actions=["Logout"]))
+
+# Next day (New date → NEW record)
+memory.add(DailyTrace(user="Alice", date="2024-01-02", actions=["Login"]))
+
+# Results:
+# - alice_2024-01-01: actions=["Login", "Logout"], summary="Active trading day..."
+# - alice_2024-01-02: actions=["Login"], summary="Brief session..."
+
+# Semantic search across time
+results = memory.search("When was Alice frustrated?", k=1)
 ```
 
-**The agent went from "trial and error" to "informed decision-making". No boilerplate. No manual consolidation. Just add experiences and let Ontomem synthesize wisdom.**
+For a complete working example, see [examples/06_temporal_memory_consolidation.py](examples/06_temporal_memory_consolidation.py)
+
+</details>
 
 ---
 
@@ -267,81 +310,6 @@ uv sync --group dev
 - LangChain (for LLM integration)
 - Pydantic (for schema definition)
 - FAISS (for vector search)
-
----
-
-## 📚 API Reference
-
-### Core Methods
-
-#### `add(items: Union[T, List[T]]) → None`
-Add item(s) to memory. Automatically merges duplicates by key.
-
-```python
-memory.add(ResearcherProfile(...))
-memory.add([item1, item2, item3])
-```
-
-#### `get(key: Any) → Optional[T]`
-Retrieve an entity by its unique key.
-
-```python
-researcher = memory.get("yann_lecun_001")
-```
-
-#### `build_index(force: bool = False) → None`
-Build or rebuild the vector index for semantic search.
-
-```python
-memory.build_index()  # Build if clean
-memory.build_index(force=True)  # Force rebuild
-```
-
-#### `search(query: str, k: int = 5) → List[T]`
-Semantic search over all entities.
-
-```python
-results = memory.search("transformers and attention", k=10)
-```
-
-#### `dump(folder_path: Union[str, Path]) → None`
-Save memory state (data + index) to disk.
-
-```python
-memory.dump("./my_memory")
-```
-
-#### `load(folder_path: Union[str, Path]) → None`
-Load memory state from disk.
-
-```python
-memory.load("./my_memory")
-```
-
-#### `remove(key: Any) → bool`
-Remove an entity by key.
-
-```python
-success = memory.remove("yann_lecun_001")
-```
-
-#### `clear() → None`
-Clear all entities and indices.
-
-```python
-memory.clear()
-```
-
-### Properties
-
-#### `keys: List[Any]`
-All unique keys in memory.
-
-#### `items: List[T]`
-All entity instances.
-
-#### `size: int`
-Number of entities.
 
 ---
 
