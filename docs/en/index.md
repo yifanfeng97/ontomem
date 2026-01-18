@@ -92,14 +92,21 @@ print(experience.solutions)  # Auto-merged across all observations!
 
 ## 📊 Why Ontomem?
 
-| Feature | Traditional Vector DB | Ontomem 🧠 |
-|---------|----------------------|-----------|
-| **Storage Unit** | Text chunks | **Structured Objects** |
-| **Deduplication** | Manual or via embeddings | **Native, ID-based** |
-| **Updates** | Append-only (creates dupes) | **Auto-merge (upsert)** |
-| **Query Results** | Similar text fragments | **Complete entities** |
-| **Type Safety** | ❌ None | ✅ **Pydantic** |
-| **Indexing** | Manual sync needed | ✅ **Auto-synced** |
+Most memory libraries store **Raw Text** or **Chat History**. Ontomem stores **Consolidated Knowledge**.
+
+| Feature | **Ontomem** 🧠 | **Mem0** / Zep | **LangChain Memory** | **Vector DBs** (Pinecone/Chroma) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Core Storage Unit** | ✅ **Structured Objects** (Pydantic) | Text Chunks + Metadata | Raw Chat Logs | Embedding Vectors |
+| **Data "Digestion"** | ✅ **Auto-Consolidation & merging** | Simple Extraction | ❌ Append-only | ❌ Append-only |
+| **Time Awareness** | ✅ **Time-Slicing** (Daily/Session Aggregation) | ❌ Timestamp metadata only | ❌ Sequential only | ❌ Metadata filtering only |
+| **Conflict Resolution**| ✅ **LLM Logic** (Synthesize/Prioritize) | ❌ Last-write-wins | ❌ None | ❌ None |
+| **Type Safety** | ✅ **Strict Schema** | ⚠️ Loose JSON | ❌ String only | ❌ None |
+| **Ideal For** | **Long-term Agent Profiles, Knowledge Graphs** | Simple RAG, Search | Chatbots, Context Window | Semantic Search |
+
+### 💡 The "Consolidation" Advantage
+
+- **Traditional RAG**: Stores 50 chunks of "Alice likes apples", "Alice likes bananas". Search returns 50 fragments.
+- **Ontomem**: Merges them into 1 object: `User(name="Alice", likes=["apples", "bananas"])`. Search returns **one complete truth**.
 
 ---
 

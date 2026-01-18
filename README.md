@@ -53,7 +53,27 @@ Save your complete memory state (structured data + vector indices) to disk and r
 
 ---
 
-## 🚀 Quick Start
+## � Ontomem vs. Other Memory Systems
+
+Most memory libraries store **Raw Text** or **Chat History**. Ontomem stores **Consolidated Knowledge**.
+
+| Feature | **Ontomem** 🧠 | **Mem0** / Zep | **LangChain Memory** | **Vector DBs** (Pinecone/Chroma) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Core Storage Unit** | ✅ **Structured Objects** (Pydantic) | Text Chunks + Metadata | Raw Chat Logs | Embedding Vectors |
+| **Data "Digestion"** | ✅ **Auto-Consolidation & merging** | Simple Extraction | ❌ Append-only | ❌ Append-only |
+| **Time Awareness** | ✅ **Time-Slicing** (Daily/Session Aggregation) | ❌ Timestamp metadata only | ❌ Sequential only | ❌ Metadata filtering only |
+| **Conflict Resolution**| ✅ **LLM Logic** (Synthesize/Prioritize) | ❌ Last-write-wins | ❌ None | ❌ None |
+| **Type Safety** | ✅ **Strict Schema** | ⚠️ Loose JSON | ❌ String only | ❌ None |
+| **Ideal For** | **Long-term Agent Profiles, Knowledge Graphs** | Simple RAG, Search | Chatbots, Context Window | Semantic Search |
+
+### 💡 The "Consolidation" Advantage
+
+- **Traditional RAG**: Stores 50 chunks of "Alice likes apples", "Alice likes bananas". Search returns 50 fragments.
+- **Ontomem**: Merges them into 1 object: `User(name="Alice", likes=["apples", "bananas"])`. Search returns **one complete truth**.
+
+---
+
+## �🚀 Quick Start
 
 Build a structured memory store in 30 seconds.
 
@@ -255,36 +275,7 @@ new_memory.load("./researcher_knowledge")
 
 ---
 
-## 📊 Ontomem vs Traditional Approaches
-
-| Feature | Traditional Vector DB | Ontomem 🧠 |
-|---------|----------------------|-----------|
-| **Storage Unit** | Text chunks | **Structured Objects** |
-| **Deduplication** | Manual or via embeddings | **Native, ID-based** |
-| **Updates** | Append-only (creates dupes) | **Auto-merge (upsert)** |
-| **Query Results** | Similar text fragments | **Complete entities** |
-| **Type Safety** | ❌ None | ✅ **Pydantic** |
-| **Indexing** | Manual sync needed | ✅ **Auto-synced** |
-
----
-
-## 🎯 Use Cases
-
-### 🤖 AI Research Assistant
-Consolidate researcher profiles, papers, and citations from multiple sources.
-
-### 👤 Personal Knowledge Graph
-Build a living profile of contacts, their preferences, skills, and interaction history from conversations.
-
-### 🏢 Enterprise Data Hub
-Unify customer/employee records from CRM, email, support tickets, and social media.
-
-### 🧠 AI Agent Long-Term Memory
-An autonomous agent accumulates experiences and observations—Ontomem keeps them organized and searchable.
-
----
-
-## 🔧 Installation
+## � Installation & Setup
 
 ### Basic Installation
 
@@ -297,7 +288,8 @@ Or with `uv`:
 uv add ontomem
 ```
 
-### For Developers
+<details>
+<summary><b>📦 For Developers</b></summary>
 
 To set up the development environment with all testing and documentation tools:
 
@@ -310,6 +302,12 @@ uv sync --group dev
 - LangChain (for LLM integration)
 - Pydantic (for schema definition)
 - FAISS (for vector search)
+
+</details>
+
+---
+
+## 🎯 Use Cases
 
 ---
 
