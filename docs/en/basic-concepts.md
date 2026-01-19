@@ -50,7 +50,7 @@ Different scenarios require different merging approaches:
 memory = OMem(
     memory_schema=ResearcherProfile,
     key_extractor=lambda x: x.name,
-    merge_strategy=MergeStrategy.MERGE_FIELD
+    strategy_or_merger=MergeStrategy.MERGE_FIELD
 )
 ```
 

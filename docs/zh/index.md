@@ -25,6 +25,12 @@
 
 ## 📰 最新动态
 
+- **[2026-01-19] v0.1.4 发布**:
+  - **API 改进**: 将 `merge_strategy` 参数改名为 `strategy_or_merger`，更清晰且灵活
+  - **增强功能**: 新增 `**kwargs` 支持，可直接通过 `OMem` 传入合并器特定参数（如 `CUSTOM_RULE` 的 `rule` 和 `dynamic_rule`），无需预配置
+  - **优势**: 更简洁的 API 和更直观的高级合并使用方式
+  - [了解更多 →](user-guide/merge-strategies.md)
+
 - **[2026-01-19] v0.1.3 发布**:
   - **新特性**: 新增 `MergeStrategy.LLM.CUSTOM_RULE` 策略，支持用户自定义合并逻辑。直接向 LLM 合并器注入静态规则和动态上下文（通过函数）！
   - **破坏性变更**: 为提高清晰度，重命名了旧版策略名称：
@@ -88,7 +94,7 @@ memory = OMem(
     key_extractor=lambda x: x.error_signature,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 
 # 添加经验

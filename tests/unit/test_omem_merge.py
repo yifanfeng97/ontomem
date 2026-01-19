@@ -41,7 +41,7 @@ class TestMergeFieldStrategy:
             key_extractor=lambda x: x.uid,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD
+            strategy_or_merger=MergeStrategy.MERGE_FIELD
         )
 
     def test_merge_field_overwrite_none(self, memory):
@@ -81,7 +81,7 @@ class TestKeepIncomingStrategy:
             key_extractor=lambda x: x.uid,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.KEEP_INCOMING
+            strategy_or_merger=MergeStrategy.KEEP_INCOMING
         )
 
     def test_keep_incoming_overwrites_all(self, memory):
@@ -108,7 +108,7 @@ class TestKeepExistingStrategy:
             key_extractor=lambda x: x.uid,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.KEEP_EXISTING
+            strategy_or_merger=MergeStrategy.KEEP_EXISTING
         )
 
     def test_keep_existing_ignores_new(self, memory):
@@ -134,7 +134,7 @@ class TestBatchMerge:
             key_extractor=lambda x: x.uid,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD
+            strategy_or_merger=MergeStrategy.MERGE_FIELD
         )
 
     def test_batch_with_no_conflicts(self, memory):

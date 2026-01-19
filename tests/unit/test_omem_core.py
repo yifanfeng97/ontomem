@@ -19,7 +19,7 @@ def memory():
         key_extractor=lambda x: x.item_id,
         llm_client=None,  # Use non-LLM strategy
         embedder=None,
-        merge_strategy=MergeStrategy.MERGE_FIELD
+        strategy_or_merger=MergeStrategy.MERGE_FIELD
     )
 
 
@@ -117,7 +117,7 @@ class TestOMemKeyExtraction:
             key_extractor=lambda x: x.email,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD
+            strategy_or_merger=MergeStrategy.MERGE_FIELD
         )
 
         user = User(email="alice@example.com", name="Alice")

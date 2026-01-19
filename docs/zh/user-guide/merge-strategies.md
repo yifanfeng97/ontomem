@@ -28,7 +28,7 @@ from ontomem import OMem, MergeStrategy
 memory = OMem(
     memory_schema=Profile,
     key_extractor=lambda x: x.id,
-    merge_strategy=MergeStrategy.MERGE_FIELD
+    strategy_or_merger=MergeStrategy.MERGE_FIELD
 )
 
 # 第 1 天
@@ -60,7 +60,7 @@ result = memory.get("user1")
 ```python
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.KEEP_INCOMING
+    strategy_or_merger=MergeStrategy.KEEP_INCOMING
 )
 
 # 第 1 天：初始状态
@@ -96,7 +96,7 @@ result = memory.get("user1")
 ```python
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.KEEP_EXISTING
+    strategy_or_merger=MergeStrategy.KEEP_EXISTING
 )
 
 # 第 1 天：首次发表
@@ -139,7 +139,7 @@ memory = OMem(
     key_extractor=lambda x: x.id,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 ```
 
@@ -183,7 +183,7 @@ result = memory.get("John Smith")
 ```python
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.LLM.PREFER_INCOMING
+    strategy_or_merger=MergeStrategy.LLM.PREFER_INCOMING
 )
 
 # 原始观察
@@ -220,7 +220,7 @@ result = memory.get("TechCorp")
 ```python
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.LLM.PREFER_EXISTING
+    strategy_or_merger=MergeStrategy.LLM.PREFER_EXISTING
 )
 
 # 首次观察（权威性）
@@ -276,7 +276,7 @@ merger = create_merger(
 memory = OMem(
     memory_schema=UserProfile,
     key_extractor=lambda x: x.id,
-    merger=merger,
+    strategy_or_merger=merger,
     llm_client=llm,
     embedder=embedder
 )
@@ -351,7 +351,7 @@ def get_consolidation_context():
 memory = OMem(
     memory_schema=DailyReport,
     key_extractor=lambda x: f"{x.employee_id}_{x.date}",
-    merger=create_merger(
+    strategy_or_merger=create_merger(
         strategy=MergeStrategy.LLM.CUSTOM_RULE,
         rule="将多个每日更新整合成一个连贯的日报。对任务数求和，合成情绪描述。",
         dynamic_rule=get_consolidation_context

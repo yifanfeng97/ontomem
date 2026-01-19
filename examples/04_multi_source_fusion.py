@@ -195,7 +195,7 @@ def example_multi_source_fusion():
             key_extractor=lambda x: x.customer_id,
             llm_client=llm,
             embedder=None,
-            merge_strategy=MergeStrategy.LLM.BALANCED,
+            strategy_or_merger=MergeStrategy.LLM.BALANCED,
         )
     except Exception as e:
         print(f"   ⚠️  LLM not available - using field merge")
@@ -204,7 +204,7 @@ def example_multi_source_fusion():
             key_extractor=lambda x: x.customer_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD,
+            strategy_or_merger=MergeStrategy.MERGE_FIELD,
         )
 
     # Merge all data sources

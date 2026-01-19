@@ -187,7 +187,7 @@ except KeyError:
 
 # ValueError：无效策略
 try:
-    memory = OMem(..., merge_strategy="invalid")
+    memory = OMem(..., strategy_or_merger="invalid")
 except ValueError:
     print("无效策略")
 
@@ -218,7 +218,7 @@ memory = OMem(
     memory_schema=Researcher,
     key_extractor=lambda x: x.name,
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.MERGE_FIELD
+    strategy_or_merger=MergeStrategy.MERGE_FIELD
 )
 
 memory.add(Researcher(
@@ -241,7 +241,7 @@ memory = OMem(
     key_extractor=lambda x: x.name,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 ```
 

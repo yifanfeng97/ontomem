@@ -25,7 +25,7 @@ new_memory = OMem(
     memory_schema=ResearcherProfile,
     key_extractor=lambda x: x.name,
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.MERGE_FIELD
+    strategy_or_merger=MergeStrategy.MERGE_FIELD
 )
 
 # Load saved state

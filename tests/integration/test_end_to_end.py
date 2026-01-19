@@ -23,7 +23,7 @@ class TestSelfImprovingAgent:
             key_extractor=lambda x: x.error_signature,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD
+            strategy_or_merger=MergeStrategy.MERGE_FIELD
         )
 
     def test_agent_learns_from_repeated_errors(self, bug_memory):
@@ -100,7 +100,7 @@ class TestSelfImprovingAgent:
             key_extractor=lambda x: x.error_signature,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD
+            strategy_or_merger=MergeStrategy.MERGE_FIELD
         )
         bug_memory2.load(memory_dir)
 
@@ -175,7 +175,7 @@ class TestSelfImprovingAgentWithLLM:
             key_extractor=lambda x: x.error_signature,
             llm_client=llm_client,
             embedder=embedder,
-            merge_strategy=MergeStrategy.LLM.BALANCED
+            strategy_or_merger=MergeStrategy.LLM.BALANCED
         )
         
         # Day 1: First ModuleNotFoundError

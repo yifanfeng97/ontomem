@@ -69,7 +69,7 @@ def example_temporal_consolidation():
         key_extractor=lambda x: f"{x.user_id}_{x.date_str}",  # <--- 复合键
         llm_client=ChatOpenAI(model="gpt-4o"),
         embedder=OpenAIEmbeddings(),
-        merge_strategy=MergeStrategy.LLM.BALANCED
+        strategy_or_merger=MergeStrategy.LLM.BALANCED
     )
 
     print("\n" + "-"*70)

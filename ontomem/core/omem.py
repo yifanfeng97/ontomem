@@ -36,7 +36,7 @@ class OMem(BaseMem[T], Generic[T]):
 
     Example:
         >>> from pydantic import BaseModel
-        >>> from ontomem import OMem
+        >>> from ontomem import OMem, MergeStrategy
         >>> from langchain_openai import ChatOpenAI, OpenAIEmbeddings
         >>>
         >>> class UserProfile(BaseModel):
@@ -45,10 +45,24 @@ class OMem(BaseMem[T], Generic[T]):
         ...     email: str | None = None
         ...     skills: list[str] = []
         >>>
+        >>> # Method 1: Simple strategy
         >>> memory = OMem(
         ...     memory_schema=UserProfile,
         ...     key_extractor=lambda x: x.uid,
-        ...     merge_strategy=MergeStrategy.MERGE_FIELD
+        ...     llm_client=ChatOpenAI(model="gpt-4o"),
+        ...     embedder=OpenAIEmbeddings(),
+        ...     strategy_or_merger=MergeStrategy.MERGE_FIELD
+        ... )
+        >>>
+        >>> # Method 2: Custom rule with dynamic context
+        >>> memory = OMem(
+        ...     memory_schema=UserProfile,
+        ...     key_extractor=lambda x: x.uid,
+        ...     llm_client=ChatOpenAI(model="gpt-4o"),
+        ...     embedder=OpenAIEmbeddings(),
+        ...     strategy_or_merger=MergeStrategy.LLM.CUSTOM_RULE,
+        ...     rule="Merge all skills and keep the newest name",
+        ...     dynamic_rule=lambda: f"Context: {__import__('datetime').datetime.now().hour}:00"
         ... )
         >>>
         >>> memory.add([
@@ -58,6 +72,7 @@ class OMem(BaseMem[T], Generic[T]):
         >>>
         >>> alice = memory.get("u1")
         >>> print(alice.name)  # -> "Alice Smith" (merged)
+        >>> print(alice.skills)  # -> ["Python", "AI"] (merged)
     """
 
     def __init__(
@@ -67,9 +82,10 @@ class OMem(BaseMem[T], Generic[T]):
         llm_client: BaseChatModel,
         embedder: Embeddings,
         *,
-        merge_strategy: Union[MergeStrategy, BaseMerger] = MergeStrategy.LLM.BALANCED,
+        strategy_or_merger: Union[MergeStrategy, BaseMerger] = MergeStrategy.LLM.BALANCED,
         fields_for_index: Optional[List[str]] = None,
         verbose: bool = False,
+        **kwargs: Any,
     ):
         """Initialize the Memory Store.
 
@@ -79,12 +95,15 @@ class OMem(BaseMem[T], Generic[T]):
                            e.g., `lambda x: x.uid` or `lambda x: x.id`
             llm_client: LangChain ChatModel instance for merging strategies.
             embedder: LangChain Embeddings instance for semantic search.
-            merge_strategy: Strategy for handling duplicates.
-                            - MergeStrategy enum: MergeStrategy.LLM.BALANCED (default)
-                            - Custom: BaseMerger instance for full control
+            strategy_or_merger: Merge strategy definition. Can be:
+                                1. A MergeStrategy enum value (e.g., MergeStrategy.LLM.BALANCED)
+                                2. A pre-configured BaseMerger instance (for full control)
             fields_for_index: (Optional) List of field names to embed for search.
                                If None, entire JSON is embedded.
             verbose: Enable DEBUG logging.
+            **kwargs: Additional arguments passed to create_merger() when strategy_or_merger is
+                      a MergeStrategy enum. For example, rule="..." and dynamic_rule=... for
+                      MergeStrategy.LLM.CUSTOM_RULE. Ignored if strategy_or_merger is a BaseMerger instance.
         """
         if verbose:
             configure_logging(level="DEBUG")
@@ -96,14 +115,22 @@ class OMem(BaseMem[T], Generic[T]):
         self.fields_for_index = fields_for_index or []
 
         # 1. Merge Strategy Setup
-        if isinstance(merge_strategy, BaseMerger):
-            self._merger = merge_strategy
+        if isinstance(strategy_or_merger, BaseMerger):
+            # Pre-configured merger instance: use directly
+            if kwargs:
+                logger.warning(
+                    "Initialized with a Merger instance. Additional kwargs are ignored: %s",
+                    list(kwargs.keys())
+                )
+            self._merger = strategy_or_merger
         else:
+            # MergeStrategy enum: create merger with strategy and pass kwargs
             self._merger = create_merger(
-                strategy=merge_strategy,
+                strategy=strategy_or_merger,
                 key_extractor=key_extractor,
                 llm_client=llm_client,
                 item_schema=memory_schema,
+                **kwargs,  # Pass rule, dynamic_rule, etc. to create_merger
             )
 
         # 2. Storage: The single source of truth
@@ -142,7 +169,7 @@ class OMem(BaseMem[T], Generic[T]):
         """Add item(s) to memory. Automatically merges duplicates by key.
 
         If an item with the same key already exists, the new item(s) and
-        existing item are merged using the configured merge_strategy.
+        existing item are merged using the configured strategy_or_merger.
 
         Args:
             items: Single entity or list of entities to add.

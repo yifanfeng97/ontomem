@@ -127,7 +127,7 @@ def example_self_improving_debugger():
             key_extractor=lambda x: x.error_id,
             llm_client=llm,
             embedder=None,
-            merge_strategy=MergeStrategy.LLM.BALANCED,
+            strategy_or_merger=MergeStrategy.LLM.BALANCED,
         )
     except Exception as e:
         print(f"   ⚠️  LLM not available ({type(e).__name__}) - using field merge instead")
@@ -136,7 +136,7 @@ def example_self_improving_debugger():
             key_extractor=lambda x: x.error_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD,
+            strategy_or_merger=MergeStrategy.MERGE_FIELD,
         )
 
     # Add all encounters to memory
@@ -178,7 +178,7 @@ def example_self_improving_debugger():
         key_extractor=lambda x: x.error_id,
         llm_client=None,
         embedder=None,
-        merge_strategy=MergeStrategy.MERGE_FIELD,
+        strategy_or_merger=MergeStrategy.MERGE_FIELD,
     )
     omem_restored.load(str(memory_folder))
     print(f"   ✅ Restored memory size: {omem_restored.size}")

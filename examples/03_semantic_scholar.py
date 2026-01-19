@@ -176,7 +176,7 @@ def example_semantic_scholar():
             key_extractor=lambda x: x.paper_id,
             llm_client=None,
             embedder=embedder,
-            merge_strategy=MergeStrategy.MERGE_FIELD,
+            strategy_or_merger=MergeStrategy.MERGE_FIELD,
         )
     except Exception as e:
         print(f"   ⚠️  OpenAI not available - using keyword-only search")
@@ -185,7 +185,7 @@ def example_semantic_scholar():
             key_extractor=lambda x: x.paper_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD,
+            strategy_or_merger=MergeStrategy.MERGE_FIELD,
         )
 
     # Add papers to library

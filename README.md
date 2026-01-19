@@ -33,6 +33,12 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
 
 ## 📰 News
 
+- **[2026-01-19] v0.1.4 Released**:
+  - **API Improvement**: Renamed `merge_strategy` parameter to `strategy_or_merger` for better clarity and flexibility
+  - **Enhancement**: Added `**kwargs` support to directly pass merger-specific parameters (like `rule` and `dynamic_rule` for `CUSTOM_RULE`) through `OMem` without pre-configuration
+  - **Benefit**: Cleaner API and more intuitive usage patterns for advanced merging scenarios
+  - [Learn more →](docs/en/user-guide/merge-strategies.md)
+
 - **[2026-01-19] v0.1.3 Released**:
   - **New Feature**: Added `MergeStrategy.LLM.CUSTOM_RULE` strategy for user-defined merge logic. Inject static rules and dynamic context (via functions) directly into the LLM merger!
   - **Breaking Change**: Renamed legacy strategies for clarity:
@@ -157,7 +163,7 @@ memory = OMem(
     key_extractor=lambda x: x.error_signature,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 
 # Day 1: Pip install
@@ -202,7 +208,7 @@ memory = OMem(
     key_extractor=lambda x: f"{x.user}_{x.date}",  # <-- THE MAGIC KEY
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 
 # 9:00 AM event
@@ -255,14 +261,74 @@ Choose how to handle conflicts:
 | `LLM.BALANCED` | **LLM-driven semantic merging** | Complex synthesis, contradiction resolution |
 | `LLM.PREFER_INCOMING` | **LLM merges semantically, prefers new data on conflict** | New information should take priority when contradictions arise |
 | `LLM.PREFER_EXISTING` | **LLM merges semantically, prefers existing data on conflict** | Existing data should take priority when contradictions arise |
+| `LLM.CUSTOM_RULE` | **User-defined merge logic with dynamic context** | Domain-specific rules, context-aware merging |
 
 ```python
 # Example: LLM intelligently merges conflicting information
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.LLM.BALANCED  # or LLM.PREFER_INCOMING, LLM.PREFER_EXISTING
+    strategy_or_merger=MergeStrategy.LLM.BALANCED  # or LLM.PREFER_INCOMING, LLM.PREFER_EXISTING, LLM.CUSTOM_RULE
 )
 ```
+
+<details>
+<summary><b>🔧 Custom Merge Rules (Advanced)</b></summary>
+
+**Inject your own merge logic** with static rules and dynamic context:
+
+```python
+from datetime import datetime
+
+# Define a dynamic rule function (evaluated at merge time)
+def get_time_context():
+    hour = datetime.now().hour
+    if hour >= 9 and hour <= 17:
+        return "Business hours: Prefer stable, verified data"
+    else:
+        return "After-hours: Prioritize recent updates"
+
+# Use CUSTOM_RULE with static rule + dynamic context
+memory = OMem(
+    memory_schema=BugFixExperience,
+    key_extractor=lambda x: x.error_signature,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.CUSTOM_RULE,
+    rule="""
+    Merge debugging experiences intelligently:
+    - Combine all unique solutions into a list
+    - Synthesize prevention tips, incorporating domain context
+    - Keep the most recent solution as primary recommendation
+    """,
+    dynamic_rule=get_time_context  # Evaluated at merge time!
+)
+
+# Example use: Errors evolve over time
+memory.add(BugFixExperience(
+    error_signature="ModuleNotFoundError: pandas",
+    solutions=["pip install pandas"],
+    prevention_tips="Check requirements.txt first"
+))
+
+memory.add(BugFixExperience(
+    error_signature="ModuleNotFoundError: pandas",
+    solutions=["Use conda-forge mirror"],
+    prevention_tips="In restricted networks, try conda"
+))
+
+# Result: LLM merges both, considering time context from dynamic_rule
+result = memory.get("ModuleNotFoundError: pandas")
+print(result.prevention_tips)
+# >>> "Check requirements.txt first. For restricted networks, use conda-forge mirror..."
+```
+
+**When to use CUSTOM_RULE**:
+- Complex domain-specific merging logic
+- Time/context-aware decisions (e.g., "prefer old data at 2 AM, new data during day")
+- Environment-specific rules (e.g., "production mode: conservative, staging: aggressive")
+- Multi-factor decision making that LLM strategies don't cover
+
+</details>
 
 
 ## 💾 Save & Load

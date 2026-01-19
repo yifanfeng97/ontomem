@@ -26,6 +26,12 @@ Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments
 
 ## 📰 News & Updates
 
+- **[2026-01-19] v0.1.4 Released**:
+  - **API Improvement**: Renamed `merge_strategy` parameter to `strategy_or_merger` for better clarity and flexibility
+  - **Enhancement**: Added `**kwargs` support to directly pass merger-specific parameters (like `rule` and `dynamic_rule` for `CUSTOM_RULE`) through `OMem` without pre-configuration
+  - **Benefit**: Cleaner API and more intuitive usage patterns for advanced merging scenarios
+  - [Learn more →](user-guide/merge-strategies.md)
+
 - **[2026-01-19] v0.1.3 Released**:
   - **New Feature**: Added `MergeStrategy.LLM.CUSTOM_RULE` strategy for user-defined merge logic. Inject static rules and dynamic context (via functions) directly into the LLM merger!
   - **Breaking Change**: Renamed legacy strategies for clarity:
@@ -88,7 +94,7 @@ memory = OMem(
     key_extractor=lambda x: x.error_signature,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 
 # Add experiences

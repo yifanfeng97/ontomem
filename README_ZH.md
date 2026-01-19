@@ -31,6 +31,12 @@
 
 ## 📰 最新动态
 
+- **[2026-01-19] v0.1.4 发布**:
+  - **API 改进**: 将 `merge_strategy` 参数改名为 `strategy_or_merger`，更清晰且灵活
+  - **增强功能**: 新增 `**kwargs` 支持，可直接通过 `OMem` 传入合并器特定参数（如 `CUSTOM_RULE` 的 `rule` 和 `dynamic_rule`），无需预配置
+  - **优势**: 更简洁的 API 和更直观的高级合并使用方式
+  - [了解更多 →](docs/zh/user-guide/merge-strategies.md)
+
 - **[2026-01-19] v0.1.3 发布**:
   - **新特性**: 新增 `MergeStrategy.LLM.CUSTOM_RULE` 策略，支持用户自定义合并逻辑。直接向 LLM 合并器注入静态规则和动态上下文（通过函数）！
   - **破坏性变更**: 为提高清晰度，重命名了旧版策略名称：
@@ -150,7 +156,7 @@ memory = OMem(
     key_extractor=lambda x: x.error_signature,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 
 # 第一天：Pip 安装
@@ -195,7 +201,7 @@ memory = OMem(
     key_extractor=lambda x: f"{x.user}_{x.date}",  # <-- 神奇的键
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 
 # 上午 9:00 事件
@@ -249,15 +255,74 @@ for experience in results:
 | `LLM.BALANCED` | **LLM 驱动的语义合并** | 复杂综合、矛盾解决 |
 | `LLM.PREFER_INCOMING` | **LLM 语义合并，语义冲突优先新数据** | 新信息应在出现矛盾时优先考虑 |
 | `LLM.PREFER_EXISTING` | **LLM 语义合并，语义冲突优先旧数据** | 现有数据应在出现矛盾时优先考虑 |
+| `LLM.CUSTOM_RULE` | **用户自定义的合并逻辑，带有动态上下文** | 特定领域的规则、上下文感知的合并 |
 
 ```python
 # 示例：LLM 智能合并冲突的信息
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.LLM.BALANCED  # 或 LLM.PREFER_INCOMING、LLM.PREFER_EXISTING
+    merge_strategy=MergeStrategy.LLM.BALANCED  # 或 LLM.PREFER_INCOMING、LLM.PREFER_EXISTING、LLM.CUSTOM_RULE
 )
 ```
 
+<details>
+<summary><b>🔧 自定义合并规则（高级）</b></summary>
+
+**注入你自己的合并逻辑**，支持静态规则和动态上下文：
+
+```python
+from datetime import datetime
+
+# 定义一个动态规则函数（在合并时动态计算）
+def get_time_context():
+    hour = datetime.now().hour
+    if hour >= 9 and hour <= 17:
+        return "工作时间：优先使用稳定、经过验证的数据"
+    else:
+        return "非工作时间：优先使用最新更新"
+
+# 使用 CUSTOM_RULE，结合静态规则 + 动态上下文
+memory = OMem(
+    memory_schema=BugFixExperience,
+    key_extractor=lambda x: x.error_signature,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.CUSTOM_RULE,
+    rule="""
+    智能合并调试经验：
+    - 将所有独特的解决方案合并为列表
+    - 综合预防提示，融入领域上下文
+    - 保留最近的解决方案作为主要建议
+    """,
+    dynamic_rule=get_time_context  # 在合并时动态计算！
+)
+
+# 使用示例：错误随时间演变
+memory.add(BugFixExperience(
+    error_signature="ModuleNotFoundError: pandas",
+    solutions=["pip install pandas"],
+    prevention_tips="先检查 requirements.txt"
+))
+
+memory.add(BugFixExperience(
+    error_signature="ModuleNotFoundError: pandas",
+    solutions=["使用 conda-forge 镜像"],
+    prevention_tips="在限制网络中，尝试 conda"
+))
+
+# 结果：LLM 在考虑 dynamic_rule 的时间上下文后合并两者
+result = memory.get("ModuleNotFoundError: pandas")
+print(result.prevention_tips)
+# >>> "先检查 requirements.txt。在限制网络中，使用 conda-forge 镜像..."
+```
+
+**何时使用 CUSTOM_RULE**：
+- 复杂的特定领域合并逻辑
+- 时间/上下文感知的决策（如"凌晨 2 点优先旧数据，白天优先新数据"）
+- 环保境特定规则（如"生产环保：保守策略，测试环保：激进策略"）
+- LLM 策略无法覆盖的多因素决策
+
+</details>
 
 ## 💾 保存与加载
 

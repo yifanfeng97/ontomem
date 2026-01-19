@@ -125,7 +125,7 @@ def example_self_improving_debugger():
             key_extractor=lambda x: x.error_id,
             llm_client=llm,
             embedder=None,
-            merge_strategy=MergeStrategy.LLM.BALANCED,
+            strategy_or_merger=MergeStrategy.LLM.BALANCED,
         )
     except Exception as e:
         print(f"   ⚠️  LLM不可用 ({type(e).__name__}) - 改用字段合并")
@@ -134,7 +134,7 @@ def example_self_improving_debugger():
             key_extractor=lambda x: x.error_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.MERGE_FIELD,
+            strategy_or_merger=MergeStrategy.MERGE_FIELD,
         )
 
     # 将所有遭遇添加到内存
@@ -176,7 +176,7 @@ def example_self_improving_debugger():
         key_extractor=lambda x: x.error_id,
         llm_client=None,
         embedder=None,
-        merge_strategy=MergeStrategy.MERGE_FIELD,
+        strategy_or_merger=MergeStrategy.MERGE_FIELD,
     )
     omem_restored.load(str(memory_folder))
     print(f"   ✅ 恢复的内存大小: {omem_restored.size}")

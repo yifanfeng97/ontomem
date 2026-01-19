@@ -28,7 +28,7 @@ from ontomem import OMem, MergeStrategy
 memory = OMem(
     memory_schema=Profile,
     key_extractor=lambda x: x.id,
-    merge_strategy=MergeStrategy.MERGE_FIELD
+    strategy_or_merger=MergeStrategy.MERGE_FIELD
 )
 
 # Day 1
@@ -60,7 +60,7 @@ result = memory.get("user1")
 ```python
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.KEEP_INCOMING
+    strategy_or_merger=MergeStrategy.KEEP_INCOMING
 )
 
 # Day 1: Initial status
@@ -96,7 +96,7 @@ result = memory.get("user1")
 ```python
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.KEEP_EXISTING
+    strategy_or_merger=MergeStrategy.KEEP_EXISTING
 )
 
 # Day 1: First publication
@@ -139,7 +139,7 @@ memory = OMem(
     key_extractor=lambda x: x.id,
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.LLM.BALANCED
+    strategy_or_merger=MergeStrategy.LLM.BALANCED
 )
 ```
 
@@ -183,7 +183,7 @@ result = memory.get("John Smith")
 ```python
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.LLM.PREFER_INCOMING
+    strategy_or_merger=MergeStrategy.LLM.PREFER_INCOMING
 )
 
 # Original observation
@@ -220,7 +220,7 @@ result = memory.get("TechCorp")
 ```python
 memory = OMem(
     ...,
-    merge_strategy=MergeStrategy.LLM.PREFER_EXISTING
+    strategy_or_merger=MergeStrategy.LLM.PREFER_EXISTING
 )
 
 # First observation (authoritative)
@@ -276,7 +276,7 @@ merger = create_merger(
 memory = OMem(
     memory_schema=UserProfile,
     key_extractor=lambda x: x.id,
-    merger=merger,
+    strategy_or_merger=merger,
     llm_client=llm,
     embedder=embedder
 )

@@ -129,7 +129,7 @@ def example_rpg_npc_memory():
         key_extractor=lambda x: x.player_id,
         llm_client=None,
         embedder=None,
-        merge_strategy=MergeStrategy.MERGE_FIELD,
+        strategy_or_merger=MergeStrategy.MERGE_FIELD,
     )
 
     # 添加所有遭遇记忆
