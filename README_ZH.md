@@ -10,16 +10,6 @@
 
 > **让你的 AI 智能体拥有"连贯"的记忆，而不仅仅是"碎片"的检索。**
 
-## 📰 最新动态
-
-- **[2026-01-19] v0.1.3 发布**:
-  - **新特性**: 新增 `MergeStrategy.LLM.CUSTOM_RULE` 策略，支持用户自定义合并逻辑。直接向 LLM 合并器注入静态规则和动态上下文（通过函数）！
-  - **破坏性变更**: 为提高清晰度，重命名了旧版策略名称：
-    - `KEEP_OLD` → `KEEP_EXISTING`
-    - `KEEP_NEW` → `KEEP_INCOMING`
-    - `FIELD_MERGE` → `MERGE_FIELD`
-  - [了解更多关于自定义规则](docs/zh/user-guide/merge-strategies.md#custom-rules)
-
 <p align="center">
   <img src="docs/assets/fw.png" alt="OntoMem Framework Diagram" width="800" />
 </p>
@@ -38,7 +28,17 @@
 
 **它不仅仅存储数据——它持续"消化"和"组织"数据。**
 
----
+
+## 📰 最新动态
+
+- **[2026-01-19] v0.1.3 发布**:
+  - **新特性**: 新增 `MergeStrategy.LLM.CUSTOM_RULE` 策略，支持用户自定义合并逻辑。直接向 LLM 合并器注入静态规则和动态上下文（通过函数）！
+  - **破坏性变更**: 为提高清晰度，重命名了旧版策略名称：
+    - `KEEP_OLD` → `KEEP_EXISTING`
+    - `KEEP_NEW` → `KEEP_INCOMING`
+    - `FIELD_MERGE` → `MERGE_FIELD`
+  - [了解更多关于自定义规则](docs/zh/user-guide/merge-strategies.md#custom-rules)
+
 
 ## ✨ 为什么选择 OntoMem？
 
@@ -55,7 +55,6 @@
 ### 💾 状态保持 & 持久化
 将完整的记忆状态（结构化数据 + 向量索引）保存到磁盘，下次启动时可在秒级恢复。
 
----
 
 ## 🧠 OntoMem 与其他记忆库对比
 
@@ -75,7 +74,6 @@
 - **传统 RAG/Memory**: 存储 50 条零散记录（如"Alice 喜欢苹果"、"Alice 喜欢香蕉"）。检索时返回 50 个碎片。
 - **OntoMem**: 将其"消化"为 1 个对象：`User(name="Alice", likes=["苹果", "香蕉"])`。检索时返回**唯一的完整事实**。
 
----
 
 ## 🚀 快速开始
 
@@ -130,7 +128,6 @@ all_keys = memory.keys
 memory.remove("Alice")
 ```
 
----
 
 ## 💡 高级示例
 
@@ -222,7 +219,6 @@ results = memory.search("Alice 什么时候感到沮丧？", k=1)
 
 </details>
 
----
 
 ## 🔍 语义搜索
 
@@ -240,7 +236,6 @@ for experience in results:
     print(f"  解决方案: {experience.solutions}")
 ```
 
----
 
 ## 🛠️ 合并策略
 
@@ -263,7 +258,6 @@ memory = OMem(
 )
 ```
 
----
 
 ## 💾 保存与加载
 
@@ -278,7 +272,6 @@ new_memory = OMem(...)
 new_memory.load("./debug_knowledge")
 ```
 
----
 
 ## 🔧 安装与设置
 
@@ -310,24 +303,22 @@ uv sync --group dev
 
 </details>
 
----
+
 ## 👨‍💻 作者
 
 **Yifan Feng** - [evanfeng97@gmail.com](mailto:evanfeng97@gmail.com)
 
----
 
 ## 🤝 贡献
 
 我们在构建下一代 AI 记忆标准。欢迎 PR 和 Issue！
 
----
+
 ## 📝 许可证
 
 根据 Apache License, Version 2.0 许可证 - 详见 [LICENSE](LICENSE) 文件。
 
 您可以在 Apache License 2.0 的条款下自由使用、修改和分发此软件。
 
----
 
-**由热爱记忆超越搜索的 AI 开发者用 ❤️ 构建。**
+**由相信“记忆不只是搜索”的 AI 开发者用 ❤️ 构建。**

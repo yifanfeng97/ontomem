@@ -10,15 +10,6 @@
 
 > **Give your AI agent a "coherent" memory, not just "fragmented" retrieval.**
 
-## 📰 News
-
-- **[2026-01-19] v0.1.3 Released**:
-  - **New Feature**: Added `MergeStrategy.LLM.CUSTOM_RULE` strategy for user-defined merge logic. Inject static rules and dynamic context (via functions) directly into the LLM merger!
-  - **Breaking Change**: Renamed legacy strategies for clarity:
-    - `KEEP_OLD` → `KEEP_EXISTING`
-    - `KEEP_NEW` → `KEEP_INCOMING`
-    - `FIELD_MERGE` → `MERGE_FIELD`
-  - [Learn more about Custom Rules](docs/en/user-guide/merge-strategies.md#custom-merge-rules)
 
 <p align="center">
   <img src="docs/assets/fw.png" alt="OntoMem Framework Diagram" width="800" />
@@ -40,7 +31,16 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
 
 **It doesn't just store data—it continuously "digests" and "organizes" it.**
 
----
+## 📰 News
+
+- **[2026-01-19] v0.1.3 Released**:
+  - **New Feature**: Added `MergeStrategy.LLM.CUSTOM_RULE` strategy for user-defined merge logic. Inject static rules and dynamic context (via functions) directly into the LLM merger!
+  - **Breaking Change**: Renamed legacy strategies for clarity:
+    - `KEEP_OLD` → `KEEP_EXISTING`
+    - `KEEP_NEW` → `KEEP_INCOMING`
+    - `FIELD_MERGE` → `MERGE_FIELD`
+  - [Learn more about Custom Rules](docs/en/user-guide/merge-strategies.md#custom-merge-rules)
+
 
 ## ✨ Why OntoMem?
 
@@ -62,7 +62,6 @@ When you insert new data about an existing entity, OntoMem doesn't create duplic
 ### 💾 Stateful & Persistent
 Save your complete memory state (structured data + vector indices) to disk and restore it in seconds on next startup.
 
----
 
 ## 🧠 OntoMem vs. Other Memory Systems
 
@@ -82,7 +81,6 @@ Most memory libraries store **Raw Text** or **Chat History**. OntoMem stores **C
 - **Traditional RAG**: Stores 50 chunks of "Alice likes apples", "Alice likes bananas". Search returns 50 fragments.
 - **OntoMem**: Merges them into 1 object: `User(name="Alice", likes=["apples", "bananas"])`. Search returns **one complete truth**.
 
----
 
 ## 🚀 Quick Start
 
@@ -137,7 +135,6 @@ all_keys = memory.keys
 memory.remove("Alice")
 ```
 
----
 
 ## 💡 Advanced Examples
 
@@ -229,7 +226,6 @@ For a complete working example, see [examples/06_temporal_memory_consolidation.p
 
 </details>
 
----
 
 ## 🔍 Semantic Search
 
@@ -246,7 +242,6 @@ for researcher in results:
     print(f"- {researcher.name}: {researcher.research_interests}")
 ```
 
----
 
 ## 🛠️ Merge Strategies
 
@@ -269,7 +264,6 @@ memory = OMem(
 )
 ```
 
----
 
 ## 💾 Save & Load
 
@@ -284,7 +278,6 @@ new_memory = OMem(...)
 new_memory.load("./researcher_knowledge")
 ```
 
----
 
 ## 🔧 Installation & Setup
 
@@ -316,19 +309,16 @@ uv sync --group dev
 
 </details>
 
----
 
 ## 👨‍💻 Author
 
 **Yifan Feng** - [evanfeng97@gmail.com](mailto:evanfeng97@gmail.com)
 
----
 
 ## 🤝 Contributing
 
 We're building the next generation of AI memory standards. PRs and issues welcome!
 
----
 
 ## 📝 License
 
@@ -336,6 +326,5 @@ Licensed under the Apache License, Version 2.0 - See [LICENSE](LICENSE) file for
 
 You are free to use, modify, and distribute this software under the terms of the Apache License 2.0.
 
----
 
 **Built with ❤️ for AI developers who believe memory is more than just search.**
