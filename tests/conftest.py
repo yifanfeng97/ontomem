@@ -54,10 +54,10 @@ def pytest_configure(config):
     
     # 在启动时打印信息
     if OPENAI_API_KEY:
-        print("\n✅ OpenAI API key found. LLM tests enabled.")
+        print("\n[OK] OpenAI API key found. LLM tests enabled.")
         print(f"   Model: {DEFAULT_LLM_MODEL}")
     else:
-        print("\n⚠️  OpenAI API key NOT found in .env. LLM tests will be skipped.")
+        print("\n[WARN]  OpenAI API key NOT found in .env. LLM tests will be skipped.")
 
 
 @pytest.fixture(autouse=True)

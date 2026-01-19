@@ -25,7 +25,7 @@ new_memory = OMem(
     memory_schema=ResearcherProfile,
     key_extractor=lambda x: x.name,
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.FIELD_MERGE
+    merge_strategy=MergeStrategy.MERGE_FIELD
 )
 
 # 加载已保存的状态

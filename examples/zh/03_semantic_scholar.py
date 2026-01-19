@@ -176,7 +176,7 @@ def example_semantic_scholar():
             key_extractor=lambda x: x.paper_id,
             llm_client=None,
             embedder=embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE,
+            merge_strategy=MergeStrategy.MERGE_FIELD,
         )
     except Exception as e:
         print(f"   ⚠️  OpenAI不可用 - 仅使用关键字搜索")
@@ -185,7 +185,7 @@ def example_semantic_scholar():
             key_extractor=lambda x: x.paper_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE,
+            merge_strategy=MergeStrategy.MERGE_FIELD,
         )
 
     # 将论文添加到库中

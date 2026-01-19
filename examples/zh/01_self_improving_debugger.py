@@ -134,7 +134,7 @@ def example_self_improving_debugger():
             key_extractor=lambda x: x.error_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE,
+            merge_strategy=MergeStrategy.MERGE_FIELD,
         )
 
     # 将所有遭遇添加到内存
@@ -176,7 +176,7 @@ def example_self_improving_debugger():
         key_extractor=lambda x: x.error_id,
         llm_client=None,
         embedder=None,
-        merge_strategy=MergeStrategy.FIELD_MERGE,
+        merge_strategy=MergeStrategy.MERGE_FIELD,
     )
     omem_restored.load(str(memory_folder))
     print(f"   ✅ 恢复的内存大小: {omem_restored.size}")

@@ -57,7 +57,7 @@ memory = OMem(
     key_extractor=lambda x: x.name,  # 使用名字作为唯一键
     llm_client=ChatOpenAI(model="gpt-4o"),
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.FIELD_MERGE  # 从简单开始
+    merge_strategy=MergeStrategy.MERGE_FIELD  # 从简单开始
 )
 ```
 

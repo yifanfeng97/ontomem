@@ -38,7 +38,7 @@ class TestIndexing:
             key_extractor=lambda x: x.doc_id,
             llm_client=None,
             embedder=embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory.build_index()
         # Should not raise, index is None
@@ -55,7 +55,7 @@ class TestIndexing:
             key_extractor=lambda x: x.doc_id,
             llm_client=None,
             embedder=embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
         docs = [
@@ -79,7 +79,7 @@ class TestIndexing:
             key_extractor=lambda x: x.doc_id,
             llm_client=None,
             embedder=embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
         memory.add(Document(doc_id="1", title="A", content="Content A"))
@@ -101,7 +101,7 @@ class TestIndexing:
             key_extractor=lambda x: x.doc_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
         with pytest.raises(RuntimeError):
@@ -128,7 +128,7 @@ class TestSearch:
             key_extractor=lambda x: x.doc_id,
             llm_client=None,
             embedder=embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
         docs = [
@@ -159,7 +159,7 @@ class TestSearch:
             key_extractor=lambda x: x.doc_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
         with pytest.raises(RuntimeError):

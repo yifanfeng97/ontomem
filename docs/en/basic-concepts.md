@@ -41,7 +41,7 @@ When you add an entity with an existing key, OntoMem **merges** it instead of cr
 
 Different scenarios require different merging approaches:
 
-### FIELD_MERGE (Default)
+### MERGE_FIELD (Default)
 - Non-null fields overwrite
 - Lists are appended
 - Simple and predictable
@@ -50,7 +50,7 @@ Different scenarios require different merging approaches:
 memory = OMem(
     memory_schema=ResearcherProfile,
     key_extractor=lambda x: x.name,
-    merge_strategy=MergeStrategy.FIELD_MERGE
+    merge_strategy=MergeStrategy.MERGE_FIELD
 )
 ```
 

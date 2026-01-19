@@ -204,7 +204,7 @@ def example_multi_source_fusion():
             key_extractor=lambda x: x.customer_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE,
+            merge_strategy=MergeStrategy.MERGE_FIELD,
         )
 
     # Merge all data sources

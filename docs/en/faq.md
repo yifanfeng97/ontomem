@@ -20,7 +20,7 @@ pip install faiss-gpu
 
 ### Q: Can I use OntoMem without LLM features?
 
-**A:** Yes! LLM features are optional. You can use classic merge strategies (FIELD_MERGE, KEEP_INCOMING, KEEP_EXISTING) without any LLM client or embedder.
+**A:** Yes! LLM features are optional. You can use classic merge strategies (MERGE_FIELD, KEEP_INCOMING, KEEP_EXISTING) without any LLM client or embedder.
 
 ---
 
@@ -69,14 +69,14 @@ memory.add(v1)  # Adds
 memory.add(v1_updated)  # Triggers merge, doesn't duplicate
 ```
 
-### Q: What's the difference between FIELD_MERGE and LLM.BALANCED?
+### Q: What's the difference between MERGE_FIELD and LLM.BALANCED?
 
 **A:**
 
-- **FIELD_MERGE**: Simple, deterministic (non-null overwrites)
+- **MERGE_FIELD**: Simple, deterministic (non-null overwrites)
 - **LLM.BALANCED**: Intelligent synthesis, can resolve complex contradictions, slower and costs LLM tokens
 
-Use FIELD_MERGE for speed/cost. Use LLM.BALANCED for complex data.
+Use MERGE_FIELD for speed/cost. Use LLM.BALANCED for complex data.
 
 ---
 
@@ -176,7 +176,7 @@ Guidelines:
 **A:** No:
 - Building index: ~0.5-1ms per entity
 - Searching: ~10-100ms for typical queries
-- Merging with FIELD_MERGE: <1ms
+- Merging with MERGE_FIELD: <1ms
 - Merging with LLM strategies: ~1-2 seconds (LLM call overhead)
 
 ### Q: Should I rebuild the index?

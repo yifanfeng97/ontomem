@@ -5,15 +5,15 @@
 | # | Name | Theme | Strategy | Lines | Complexity |
 |---|------|-------|----------|-------|-----------|
 | 01 | Self-Improving Debugger | Error Learning | LLM.BALANCED | 176 | ⭐⭐⭐ |
-| 02 | RPG NPC Memory | Character Profiling | FIELD_MERGE | 176 | ⭐⭐ |
+| 02 | RPG NPC Memory | Character Profiling | MERGE_FIELD | 176 | ⭐⭐ |
 | 03 | Semantic Scholar | Research Library | Vector Search | 218 | ⭐⭐⭐ |
 | 04 | Multi-Source Fusion | Data Integration | LLM.BALANCED | 252 | ⭐⭐⭐⭐ |
-| 05 | Conversation History | Chat Memory | FIELD_MERGE | 250 | ⭐⭐⭐ |
+| 05 | Conversation History | Chat Memory | MERGE_FIELD | 250 | ⭐⭐⭐ |
 
 ## Feature Matrix
 
 ### Merge Strategies Used
-- **FIELD_MERGE**: Examples 02, 05 (incremental field updates)
+- **MERGE_FIELD**: Examples 02, 05 (incremental field updates)
 - **LLM.BALANCED**: Examples 01, 04 (intelligent consolidation)
 - **Vector Search**: Example 03 (semantic similarity)
 
@@ -131,7 +131,7 @@ cat temp/debugger_memory.json/memory.json | python -m json.tool | head -20
 
 ### Example 2: NPC Memory
 1. Create multiple NPC encounters with player
-2. Initialize OMem with FIELD_MERGE strategy
+2. Initialize OMem with MERGE_FIELD strategy
 3. Add all encounters → Field-level merging updates profile
 4. Retrieve complete NPC memory of player
 5. Generate NPC dialogue based on memory
@@ -155,7 +155,7 @@ cat temp/debugger_memory.json/memory.json | python -m json.tool | head -20
 
 ### Example 5: Conversation
 1. Simulate 4 turns of conversation
-2. Initialize OMem with FIELD_MERGE strategy
+2. Initialize OMem with MERGE_FIELD strategy
 3. Add all turns → Facts accumulate and refine
 4. Generate AI response based on consolidated memory
 5. Display memory statistics
@@ -163,7 +163,7 @@ cat temp/debugger_memory.json/memory.json | python -m json.tool | head -20
 
 ## Key Takeaways
 
-✅ **FIELD_MERGE** works best for incremental profile building
+✅ **MERGE_FIELD** works best for incremental profile building
 ✅ **LLM.BALANCED** excels at resolving conflicts and reasoning
 ✅ **Vector Search** enables semantic discovery
 ✅ **All examples** demonstrate real-world use cases

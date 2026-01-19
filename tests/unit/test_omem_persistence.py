@@ -22,7 +22,7 @@ class TestPersistence:
             key_extractor=lambda x: x.item_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
     @pytest.fixture
@@ -94,7 +94,7 @@ class TestPersistence:
             key_extractor=lambda x: x.item_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory2.load(temp_dir)
 
@@ -117,7 +117,7 @@ class TestPersistence:
             key_extractor=lambda x: x.item_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory2.load(temp_dir)
 
@@ -146,7 +146,7 @@ class TestPersistence:
             key_extractor=lambda x: x.item_id,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory2.load(temp_dir)
 

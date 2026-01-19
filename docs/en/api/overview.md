@@ -14,7 +14,7 @@ OMem(
     key_extractor: Callable[[T], Any],
     llm_client: Optional[BaseChatModel] = None,
     embedder: Optional[Embeddings] = None,
-    merge_strategy: MergeStrategy = MergeStrategy.FIELD_MERGE
+    merge_strategy: MergeStrategy = MergeStrategy.MERGE_FIELD
 )
 ```
 
@@ -130,7 +130,7 @@ count = memory.size  # int
 from ontomem import MergeStrategy
 
 class MergeStrategy(Enum):
-    FIELD_MERGE = "field_merge"
+    MERGE_FIELD = "MERGE_FIELD"
     KEEP_INCOMING = "keep_incoming"
     KEEP_EXISTING = "keep_existing"
     
@@ -218,7 +218,7 @@ memory = OMem(
     memory_schema=Researcher,
     key_extractor=lambda x: x.name,
     embedder=OpenAIEmbeddings(),
-    merge_strategy=MergeStrategy.FIELD_MERGE
+    merge_strategy=MergeStrategy.MERGE_FIELD
 )
 
 memory.add(Researcher(

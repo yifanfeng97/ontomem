@@ -4,20 +4,21 @@
 
 ## 概述
 
-OntoMem 支持 6 种合并策略来处理更新实体时的冲突：
+OntoMem 支持 7 种合并策略来处理更新实体时的冲突：
 
 | 策略 | 类别 | 行为 | 适用场景 |
 |------|------|------|---------|
-| `FIELD_MERGE` | 经典 | 非空覆盖、列表追加 | 默认选择、简单场景 |
+| `MERGE_FIELD` | 经典 | 非空覆盖、列表追加 | 默认选择、简单场景 |
 | `KEEP_INCOMING` | 经典 | 始终使用最新数据 | 状态更新、当前状态 |
 | `KEEP_EXISTING` | 经典 | 始终保留首次观察 | 历史记录、时间戳 |
 | `LLM.BALANCED` | LLM | 智能综合两者 | 复杂矛盾 |
 | `LLM.PREFER_INCOMING` | LLM | 冲突时优先新数据 | 新信息应优先 |
 | `LLM.PREFER_EXISTING` | LLM | 冲突时优先旧数据 | 旧信息应优先 |
+| `LLM.CUSTOM_RULE` | LLM | 用户定义的逻辑和动态上下文 | 高级、特定领域的规则 |
 
 ## 经典策略
 
-### FIELD_MERGE（默认）
+### MERGE_FIELD（默认）
 
 **行为**：非空字段覆盖，列表被追加。
 
@@ -27,7 +28,7 @@ from ontomem import OMem, MergeStrategy
 memory = OMem(
     memory_schema=Profile,
     key_extractor=lambda x: x.id,
-    merge_strategy=MergeStrategy.FIELD_MERGE
+    merge_strategy=MergeStrategy.MERGE_FIELD
 )
 
 # 第 1 天
@@ -249,6 +250,124 @@ result = memory.get("Albert Einstein")
 
 ---
 
+## 自定义合并规则（Custom Rules）
+
+对于内置策略无法满足的高级场景，你可以使用 `MergeStrategy.LLM.CUSTOM_RULE` 定义自己的合并逻辑。这允许你提供自然语言指令，并在运行时注入动态上下文。
+
+### 参数
+
+- **`rule`** (str): 静态指令字符串，用自然语言描述如何处理冲突，引导 LLM 按照你的具体合并逻辑进行操作。
+- **`dynamic_rule`** (Callable[[], str], 可选): 在运行时返回字符串的函数。用于注入基于时间的逻辑、环境变量或智能体状态。
+
+### 基础示例
+
+```python
+from ontomem.merger import create_merger, MergeStrategy
+
+merger = create_merger(
+    strategy=MergeStrategy.LLM.CUSTOM_RULE,
+    key_extractor=lambda x: x.id,
+    llm_client=llm,
+    item_schema=UserProfile,
+    rule="智能合并用户档案。如果现有数据和传入数据之间出现冲突，优先使用 GitHub 来源的数据。始终保留最完整的生物描述。"
+)
+
+# 在记忆中使用
+memory = OMem(
+    memory_schema=UserProfile,
+    key_extractor=lambda x: x.id,
+    merger=merger,
+    llm_client=llm,
+    embedder=embedder
+)
+```
+
+### 动态规则
+
+动态规则在运行时评估，允许你的合并策略根据上下文进行自适应。
+
+```python
+from datetime import datetime
+
+def get_time_aware_context():
+    """将基于时间的逻辑注入合并规则。"""
+    hour = datetime.now().hour
+    if hour > 18:
+        return "当前时间：晚上。优先接受最近的更新，因为它们更新鲜。"
+    else:
+        return "当前时间：工作时间。优先使用已验证的、稳定的数据。"
+
+merger = create_merger(
+    strategy=MergeStrategy.LLM.CUSTOM_RULE,
+    key_extractor=lambda x: x.id,
+    llm_client=llm,
+    item_schema=UserProfile,
+    rule="智能合并用户档案。优先使用最新的电子邮件地址，保留所有唯一的技能。",
+    dynamic_rule=get_time_aware_context
+)
+```
+
+### 真实示例：环境感知的合并
+
+```python
+import os
+
+def get_environment_rules():
+    """根据部署环境调整合并规则。"""
+    env = os.getenv("ENVIRONMENT", "dev")
+    if env == "production":
+        return "生产环境模式：使用保守合并策略。仅接受来自已验证来源的更新。如有疑问，保留现有数据。"
+    else:
+        return "开发环境模式：接受所有传入更新，以加快迭代和测试。"
+
+merger = create_merger(
+    strategy=MergeStrategy.LLM.CUSTOM_RULE,
+    key_extractor=lambda x: x.id,
+    llm_client=llm,
+    item_schema=Company,
+    rule="通过整合所有唯一信息来合并公司记录。",
+    dynamic_rule=get_environment_rules
+)
+```
+
+### 时间序列整合示例
+
+```python
+from datetime import datetime
+
+class DailyReport(BaseModel):
+    employee_id: str
+    date: str
+    tasks_completed: int
+    mood: str
+
+def get_consolidation_context():
+    """根据报告时间调整整合逻辑。"""
+    now = datetime.now()
+    day_name = now.strftime("%A")
+    return f"今天是{day_name}。周中的报告应平衡所有任务。周末的报告应总结整周。"
+
+# 复合键：employee_id + date 用于日级整合
+memory = OMem(
+    memory_schema=DailyReport,
+    key_extractor=lambda x: f"{x.employee_id}_{x.date}",
+    merger=create_merger(
+        strategy=MergeStrategy.LLM.CUSTOM_RULE,
+        rule="将多个每日更新整合成一个连贯的日报。对任务数求和，合成情绪描述。",
+        dynamic_rule=get_consolidation_context
+    ),
+    llm_client=llm
+)
+```
+
+**何时使用**：
+- 复杂的、特定领域的合并逻辑
+- 依赖于上下文的合并（时间、环境、状态）
+- 高级数据质量规则
+- 具有特定优先级的多源协调
+
+---
+
 ## 策略比较
 
 ```python
@@ -266,7 +385,7 @@ profile_v2 = Profile(
     skills=["Python", "ML", "DevOps"]
 )
 
-# FIELD_MERGE
+# MERGE_FIELD
 # 结果：experience_years=7, skills=["Python", "ML", "DevOps"]
 
 # KEEP_INCOMING
@@ -283,6 +402,9 @@ profile_v2 = Profile(
 
 # LLM.PREFER_EXISTING
 # 结果：保留 5 年，但包括新 DevOps 技能上下文
+
+# LLM.CUSTOM_RULE
+# 结果："7 年（从 5 年演进而来）"，所有技能应用自定义逻辑
 ```
 
 ## 选择策略
@@ -297,18 +419,19 @@ profile_v2 = Profile(
 └─ 否，永不改变 → KEEP_EXISTING
 
 你的数据是否复杂/多面？
-├─ 简单字段 → FIELD_MERGE
+├─ 简单字段 → MERGE_FIELD
 └─ 复杂关系/矛盾 → LLM.* 策略
 ```
 
 ### 快速参考
 
-- 🎯 **默认**：`FIELD_MERGE` - 适用于大多数情况
+- 🎯 **默认**：`MERGE_FIELD` - 适用于大多数情况
 - ⚡ **状态更新**：`KEEP_INCOMING` - 最新优先
 - 📚 **历史**：`KEEP_EXISTING` - 首先优先
 - 🧠 **复杂逻辑**：`LLM.BALANCED` - 智能综合
 - 🔄 **演变数据**：`LLM.PREFER_INCOMING` - 新数据优先
 - 🏛️ **权威**：`LLM.PREFER_EXISTING` - 原始为真
+- ✨ **自定义规则**：`LLM.CUSTOM_RULE` - 用户定义的逻辑，支持运行时上下文
 
 ---
 
@@ -316,12 +439,13 @@ profile_v2 = Profile(
 
 | 策略 | 速度 | 成本 | 备注 |
 |------|------|------|------|
-| FIELD_MERGE | ⚡⚡⚡ | 免费 | 无 API 调用 |
+| MERGE_FIELD | ⚡⚡⚡ | 免费 | 无 API 调用 |
 | KEEP_INCOMING | ⚡⚡⚡ | 免费 | 无 API 调用 |
 | KEEP_EXISTING | ⚡⚡⚡ | 免费 | 无 API 调用 |
 | LLM.BALANCED | ⚡ | LLM tokens | 每次合并约 500-1000 tokens |
 | LLM.PREFER_INCOMING | ⚡ | LLM tokens | 每次合并约 500-1000 tokens |
 | LLM.PREFER_EXISTING | ⚡ | LLM tokens | 每次合并约 500-1000 tokens |
+| LLM.CUSTOM_RULE | ⚡ | LLM tokens | 每次合并约 500-1000 tokens + 动态规则评估开销 |
 
 **提示**：对于高频更新使用经典策略，LLM 策略谨慎用于重要整合。
 

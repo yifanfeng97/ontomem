@@ -120,7 +120,7 @@ def example_rpg_npc_memory():
         )
         print(f"     已知技能：{', '.join(memory.known_skills) or '（未知）'}")
 
-    # 使用FIELD_MERGE策略初始化NPC记忆
+    # 使用MERGE_FIELD策略初始化NPC记忆
     print("\n🧠 构建NPC的综合记忆...")
     from ontomem.merger import MergeStrategy
     
@@ -129,7 +129,7 @@ def example_rpg_npc_memory():
         key_extractor=lambda x: x.player_id,
         llm_client=None,
         embedder=None,
-        merge_strategy=MergeStrategy.FIELD_MERGE,
+        merge_strategy=MergeStrategy.MERGE_FIELD,
     )
 
     # 添加所有遭遇记忆

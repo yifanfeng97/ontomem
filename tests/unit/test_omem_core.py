@@ -13,13 +13,13 @@ class SimpleItem(BaseModel):
 
 @pytest.fixture
 def memory():
-    """Fixture: Basic OMem instance with FIELD_MERGE strategy."""
+    """Fixture: Basic OMem instance with MERGE_FIELD strategy."""
     return OMem(
         memory_schema=SimpleItem,
         key_extractor=lambda x: x.item_id,
         llm_client=None,  # Use non-LLM strategy
         embedder=None,
-        merge_strategy=MergeStrategy.FIELD_MERGE
+        merge_strategy=MergeStrategy.MERGE_FIELD
     )
 
 
@@ -117,7 +117,7 @@ class TestOMemKeyExtraction:
             key_extractor=lambda x: x.email,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
         user = User(email="alice@example.com", name="Alice")

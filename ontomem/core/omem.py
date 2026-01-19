@@ -48,7 +48,7 @@ class OMem(BaseMem[T], Generic[T]):
         >>> memory = OMem(
         ...     memory_schema=UserProfile,
         ...     key_extractor=lambda x: x.uid,
-        ...     merge_strategy=MergeStrategy.FIELD_MERGE
+        ...     merge_strategy=MergeStrategy.MERGE_FIELD
         ... )
         >>>
         >>> memory.add([

@@ -30,7 +30,7 @@ using LLM-powered merging to generate better solutions.
 
 ### 02_rpg_npc_memory.py
 **Theme**: Character Profile Building
-**Strategy**: FIELD_MERGE (incremental field updates)
+**Strategy**: MERGE_FIELD (incremental field updates)
 
 Simulates an RPG game where NPCs build their memory of player characters
 through multiple interactions. Each encounter adds or updates information.
@@ -81,7 +81,7 @@ support, marketing) into a unified profile using intelligent merging.
 
 ### 05_conversation_history.py
 **Theme**: Conversational Memory Evolution
-**Strategy**: FIELD_MERGE with incremental fact accumulation
+**Strategy**: MERGE_FIELD with incremental fact accumulation
 
 Shows how AI maintains and evolves its understanding of a user through
 multi-turn conversation. Each turn adds or refines knowledge.

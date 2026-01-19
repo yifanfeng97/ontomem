@@ -18,7 +18,7 @@
 模拟 RPG 游戏中，NPC 通过多次交互来构建对玩家角色的记忆。
 
 **主题**：角色档案构建  
-**策略**：FIELD_MERGE（增量字段更新）  
+**策略**：MERGE_FIELD（增量字段更新）  
 **关键特性**：多种交互类型、渐进式声誉追踪、增量技能识别  
 **[查看示例 →](02-rpg-npc-memory.md)** | [源代码](../../../examples/02_rpg_npc_memory.py)
 
@@ -48,7 +48,7 @@
 展示 AI 如何通过多轮对话来维护和演进对用户的理解。
 
 **主题**：对话记忆演进  
-**策略**：FIELD_MERGE 增量事实累积  
+**策略**：MERGE_FIELD 增量事实累积  
 **关键特性**：逐轮更新、增量事实累积、上下文维护  
 **[查看示例 →](05-conversation-history.md)** | [源代码](../../../examples/05_conversation_history.py)
 
@@ -92,10 +92,10 @@ python 01_self_improving_debugger.py
 | # | 示例 | 主题 | 策略 | 复杂度 | 需要 API |
 |---|------|------|------|-------|---------|
 | 01 | 自我改进的调试器 | 错误学习 | LLM.BALANCED | ⭐⭐⭐ | 可选 |
-| 02 | RPG NPC 记忆 | 角色档案 | FIELD_MERGE | ⭐⭐ | ❌ 否 |
+| 02 | RPG NPC 记忆 | 角色档案 | MERGE_FIELD | ⭐⭐ | ❌ 否 |
 | 03 | 语义学者 | 论文库 | 向量搜索 | ⭐⭐⭐ | ✅ 是 |
 | 04 | 多源融合 | 数据整合 | LLM.BALANCED | ⭐⭐⭐⭐ | 可选 |
-| 05 | 对话历史 | 聊天记忆 | FIELD_MERGE | ⭐⭐⭐ | ❌ 否 |
+| 05 | 对话历史 | 聊天记忆 | MERGE_FIELD | ⭐⭐⭐ | ❌ 否 |
 | 06 | 时序记忆 | 时间序列 | LLM.BALANCED | ⭐⭐⭐ | 可选 |
 
 ---

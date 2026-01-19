@@ -23,12 +23,6 @@ merge them into one complete item by combining information from both.
    - For list fields, combine both lists and remove duplicates
 3. Goal: Create the most complete merged item
 
-**Item A (existing):**
-{item_existing}
-
-**Item B (incoming):**
-{item_incoming}
-
 **Instructions:**
 Merge the items intelligently. When semantic conflicts arise, choose the incoming value.
 Ensure the output matches the expected schema."""
@@ -82,6 +76,7 @@ class PreferIncomingMerger(BaseLLMMerger[T]):
         >>> # Note: when semantic conflicts arise, incoming values are preferred
     """
 
-    def get_system_prompt(self) -> str:
+    @property
+    def system_prompt(self) -> str:
         """Return the incoming merge system prompt."""
         return INCOMING_PROMPT

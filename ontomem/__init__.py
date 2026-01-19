@@ -7,6 +7,7 @@ with automatic deduplication, merging, and vector-based search.
 from .core.omem import OMem
 from .core.base import BaseMem
 from .merger import (
+    MergeStrategy,
     BaseMerger,
     FieldMerger,
     KeepIncomingMerger,
@@ -14,8 +15,7 @@ from .merger import (
     BaseLLMMerger,
     BalancedMerger,
     PreferExistingMerger,
-    PreferIncomingMerger,
-    MergeStrategy
+    PreferIncomingMerger
 )
 from .utils.logging import configure_logging, get_logger
 

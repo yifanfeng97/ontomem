@@ -20,7 +20,7 @@ pip install faiss-gpu
 
 ### Q: 我可以在不使用 LLM 功能的情况下使用 OntoMem 吗？
 
-**A:** 可以！LLM 功能是可选的。你可以使用经典合并策略（FIELD_MERGE、KEEP_INCOMING、KEEP_EXISTING）而无需任何 LLM 客户端或嵌入器。
+**A:** 可以！LLM 功能是可选的。你可以使用经典合并策略（MERGE_FIELD、KEEP_INCOMING、KEEP_EXISTING）而无需任何 LLM 客户端或嵌入器。
 
 ---
 
@@ -69,14 +69,14 @@ memory.add(v1)  # 添加
 memory.add(v1_updated)  # 触发合并，不重复
 ```
 
-### Q: FIELD_MERGE 和 LLM.BALANCED 的区别是什么？
+### Q: MERGE_FIELD 和 LLM.BALANCED 的区别是什么？
 
 **A:**
 
-- **FIELD_MERGE**：简单、确定性（非空覆盖）
+- **MERGE_FIELD**：简单、确定性（非空覆盖）
 - **LLM.BALANCED**：智能综合，可以解决复杂矛盾，较慢并消耗 LLM tokens
 
-使用 FIELD_MERGE 来提高速度/降低成本。使用 LLM.BALANCED 处理复杂数据。
+使用 MERGE_FIELD 来提高速度/降低成本。使用 LLM.BALANCED 处理复杂数据。
 
 ---
 
@@ -176,7 +176,7 @@ df.to_csv("export.csv", index=False)
 **A:** 不是：
 - 构建索引：每个实体约 0.5-1ms
 - 搜索：典型查询约 10-100ms
-- 使用 FIELD_MERGE 合并：<1ms
+- 使用 MERGE_FIELD 合并：<1ms
 - 使用 LLM 策略合并：约 1-2 秒（LLM 调用开销）
 
 ### Q: 我应该重建索引吗？

@@ -18,7 +18,7 @@ An AI debugging agent that learns from each bug it encounters, building an evolv
 Simulates an RPG game where NPCs build their memory of player characters through multiple interactions.
 
 **Theme**: Character Profile Building  
-**Strategy**: FIELD_MERGE (incremental field updates)  
+**Strategy**: MERGE_FIELD (incremental field updates)  
 **Key Features**: Multiple interaction types, progressive reputation tracking, incremental skill recognition  
 **[View Example →](02-rpg-npc-memory.md)** | [Source Code](../../../examples/02_rpg_npc_memory.py)
 
@@ -48,7 +48,7 @@ Consolidates customer information from multiple systems (CRM, billing, support, 
 Shows how AI maintains and evolves its understanding of a user through multi-turn conversation.
 
 **Theme**: Conversational Memory Evolution  
-**Strategy**: FIELD_MERGE with incremental fact accumulation  
+**Strategy**: MERGE_FIELD with incremental fact accumulation  
 **Key Features**: Turn-by-turn updates, incremental fact accumulation, context maintenance  
 **[View Example →](05-conversation-history.md)** | [Source Code](../../../examples/05_conversation_history.py)
 
@@ -92,10 +92,10 @@ python 01_self_improving_debugger.py
 | # | Example | Theme | Strategy | Complexity | API Required |
 |---|---------|-------|----------|-----------|--------------|
 | 01 | Self-Improving Debugger | Error Learning | LLM.BALANCED | ⭐⭐⭐ | Optional |
-| 02 | RPG NPC Memory | Character Profiling | FIELD_MERGE | ⭐⭐ | ❌ No |
+| 02 | RPG NPC Memory | Character Profiling | MERGE_FIELD | ⭐⭐ | ❌ No |
 | 03 | Semantic Scholar | Research Library | Vector Search | ⭐⭐⭐ | ✅ Yes |
 | 04 | Multi-Source Fusion | Data Integration | LLM.BALANCED | ⭐⭐⭐⭐ | Optional |
-| 05 | Conversation History | Chat Memory | FIELD_MERGE | ⭐⭐⭐ | ❌ No |
+| 05 | Conversation History | Chat Memory | MERGE_FIELD | ⭐⭐⭐ | ❌ No |
 | 06 | Temporal Memory | Time-Series | LLM.BALANCED | ⭐⭐⭐ | Optional |
 
 ---

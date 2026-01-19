@@ -10,6 +10,16 @@
 
 > **Give your AI agent a "coherent" memory, not just "fragmented" retrieval.**
 
+## 📰 News
+
+- **[2026-01-19] v0.1.3 Released**:
+  - **New Feature**: Added `MergeStrategy.LLM.CUSTOM_RULE` strategy for user-defined merge logic. Inject static rules and dynamic context (via functions) directly into the LLM merger!
+  - **Breaking Change**: Renamed legacy strategies for clarity:
+    - `KEEP_OLD` → `KEEP_EXISTING`
+    - `KEEP_NEW` → `KEEP_INCOMING`
+    - `FIELD_MERGE` → `MERGE_FIELD`
+  - [Learn more about Custom Rules](docs/en/user-guide/merge-strategies.md#custom-merge-rules)
+
 <p align="center">
   <img src="docs/assets/fw.png" alt="OntoMem Framework Diagram" width="800" />
 </p>
@@ -244,7 +254,7 @@ Choose how to handle conflicts:
 
 | Strategy | Behavior | Use Case |
 |----------|----------|----------|
-| `FIELD_MERGE` | Non-null overwrites, lists append | Simple attribute collection |
+| `MERGE_FIELD` | Non-null overwrites, lists append | Simple attribute collection |
 | `KEEP_INCOMING` | Latest data wins | Status updates (current role, last seen) |
 | `KEEP_EXISTING` | First observation stays | Historical records (first publication year) |
 | `LLM.BALANCED` | **LLM-driven semantic merging** | Complex synthesis, contradiction resolution |

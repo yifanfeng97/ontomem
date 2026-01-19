@@ -40,7 +40,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         assert memory.size == 0
         assert memory.keys == []
@@ -53,7 +53,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         item = SimpleItem(item_id="1", name="Alice", value=10)
         memory.add(item)
@@ -68,7 +68,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         items = [
             SimpleItem(item_id="1", name="Alice", value=10),
@@ -87,7 +87,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.KEEP_NEW
+            merge_strategy=MergeStrategy.KEEP_INCOMING
         )
         memory.add(SimpleItem(item_id="1", name="Alice", value=10))
         memory.add(SimpleItem(item_id="1", name="Bob", value=20))
@@ -104,7 +104,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.KEEP_OLD
+            merge_strategy=MergeStrategy.KEEP_EXISTING
         )
         memory.add(SimpleItem(item_id="1", name="Alice", value=10))
         memory.add(SimpleItem(item_id="1", name="Bob", value=20))
@@ -114,14 +114,14 @@ class TestOMem:
         assert item.name == "Alice"
         assert item.value == 10
 
-    def test_field_merge_strategy(self, mock_llm, mock_embedder):
+    def test_merge_field_strategy(self, mock_llm, mock_embedder):
         """Test field merge strategy on duplicate."""
         memory = OMem(
             memory_schema=SimpleItem,
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory.add(SimpleItem(item_id="1", name="Alice", value=None))
         memory.add(SimpleItem(item_id="1", name=None, value=30))
@@ -138,7 +138,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         items = [
             SimpleItem(item_id="1", name="Alice", value=10),
@@ -157,7 +157,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory.add([])
         assert memory.size == 0
@@ -169,7 +169,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory.add(SimpleItem(item_id="1", name="Alice", value=10))
         assert memory.size == 1
@@ -186,7 +186,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         removed = memory.remove("nonexistent")
         assert removed is False
@@ -198,7 +198,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory.add([
             SimpleItem(item_id="1", name="Alice", value=10),
@@ -228,7 +228,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
         class OtherItem(BaseModel):
@@ -244,7 +244,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         memory.add([
             SimpleItem(item_id="1", name="Alice", value=10),
@@ -260,7 +260,7 @@ class TestOMem:
             key_extractor=lambda x: x.item_id,
             llm_client=mock_llm,
             embedder=mock_embedder,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         items = [
             SimpleItem(item_id="1", name="Alice", value=10),

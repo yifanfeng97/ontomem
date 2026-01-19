@@ -23,7 +23,7 @@ class TestSelfImprovingAgent:
             key_extractor=lambda x: x.error_signature,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
 
     def test_agent_learns_from_repeated_errors(self, bug_memory):
@@ -47,7 +47,7 @@ class TestSelfImprovingAgent:
         # Verify consolidation
         knowledge = bug_memory.get("ModuleNotFoundError: No module named 'pandas'")
         assert knowledge is not None
-        # Latest solution overwrites (FIELD_MERGE with exclude_none replaces list)
+        # Latest solution overwrites (MERGE_FIELD with exclude_none replaces list)
         assert knowledge.successful_solutions == ["Run: conda install pandas"]
         # But the analysis is updated to the latest
         assert "binary incompatibility" in knowledge.root_cause_analysis
@@ -100,7 +100,7 @@ class TestSelfImprovingAgent:
             key_extractor=lambda x: x.error_signature,
             llm_client=None,
             embedder=None,
-            merge_strategy=MergeStrategy.FIELD_MERGE
+            merge_strategy=MergeStrategy.MERGE_FIELD
         )
         bug_memory2.load(memory_dir)
 
@@ -130,7 +130,7 @@ class TestSelfImprovingAgent:
 
         # Consolidated view
         knowledge = bug_memory.get(error_sig)
-        # Latest solution overwrites in FIELD_MERGE mode
+        # Latest solution overwrites in MERGE_FIELD mode
         assert knowledge.successful_solutions == ["Use try-except-except"]
         # But comprehensive analysis from latest update is preserved
         assert knowledge.avoidance_tips == "Use enumerate instead of manual indexing"

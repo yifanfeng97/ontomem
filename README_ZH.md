@@ -10,6 +10,16 @@
 
 > **让你的 AI 智能体拥有"连贯"的记忆，而不仅仅是"碎片"的检索。**
 
+## 📰 最新动态
+
+- **[2026-01-19] v0.1.3 发布**:
+  - **新特性**: 新增 `MergeStrategy.LLM.CUSTOM_RULE` 策略，支持用户自定义合并逻辑。直接向 LLM 合并器注入静态规则和动态上下文（通过函数）！
+  - **破坏性变更**: 为提高清晰度，重命名了旧版策略名称：
+    - `KEEP_OLD` → `KEEP_EXISTING`
+    - `KEEP_NEW` → `KEEP_INCOMING`
+    - `FIELD_MERGE` → `MERGE_FIELD`
+  - [了解更多关于自定义规则](docs/zh/user-guide/merge-strategies.md#custom-rules)
+
 <p align="center">
   <img src="docs/assets/fw.png" alt="OntoMem Framework Diagram" width="800" />
 </p>
@@ -238,7 +248,7 @@ for experience in results:
 
 | 策略 | 行为 | 适用场景 |
 |------|------|---------|
-| `FIELD_MERGE` | 非空覆盖、列表追加 | 简单属性收集 |
+| `MERGE_FIELD` | 非空覆盖、列表追加 | 简单属性收集 |
 | `KEEP_INCOMING` | 最新数据优先 | 状态更新（当前角色、最后在线时间） |
 | `KEEP_EXISTING` | 首个观察保留 | 历史记录（首次发布年份） |
 | `LLM.BALANCED` | **LLM 驱动的语义合并** | 复杂综合、矛盾解决 |

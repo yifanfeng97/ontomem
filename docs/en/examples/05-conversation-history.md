@@ -10,7 +10,7 @@ Shows how AI maintains and evolves its understanding of a user through multi-tur
 
 ## Strategy
 
-**FIELD_MERGE with incremental fact accumulation**
+**MERGE_FIELD with incremental fact accumulation**
 
 ## Key Features
 

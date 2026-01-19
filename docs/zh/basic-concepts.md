@@ -41,7 +41,7 @@ memory = OMem(
 
 不同的场景需要不同的合并方法：
 
-### FIELD_MERGE（默认）
+### MERGE_FIELD（默认）
 - 非空字段覆盖
 - 列表被追加
 - 简单可预测
@@ -50,7 +50,7 @@ memory = OMem(
 memory = OMem(
     memory_schema=ResearcherProfile,
     key_extractor=lambda x: x.name,
-    merge_strategy=MergeStrategy.FIELD_MERGE
+    merge_strategy=MergeStrategy.MERGE_FIELD
 )
 ```
 

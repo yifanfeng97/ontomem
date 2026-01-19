@@ -177,7 +177,7 @@ def example_conversation_history():
         key_extractor=lambda x: x.session_id,
         llm_client=None,
         embedder=None,
-        merge_strategy=MergeStrategy.FIELD_MERGE,
+        merge_strategy=MergeStrategy.MERGE_FIELD,
     )
 
     # Add all conversation turns to memory

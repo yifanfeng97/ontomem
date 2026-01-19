@@ -10,7 +10,7 @@ Simulates an RPG game where NPCs build their memory of player characters through
 
 ## Strategy
 
-**FIELD_MERGE** (incremental field updates)
+**MERGE_FIELD** (incremental field updates)
 
 ## Key Features
 

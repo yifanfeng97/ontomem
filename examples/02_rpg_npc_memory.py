@@ -121,7 +121,7 @@ def example_rpg_npc_memory():
         )
         print(f"     Known Skills: {', '.join(memory.known_skills) or '(unknown)'}")
 
-    # Initialize NPC memory with FIELD_MERGE strategy
+    # Initialize NPC memory with MERGE_FIELD strategy
     print("\n🧠 Building NPC's consolidated memory...")
     from ontomem.merger import MergeStrategy
     
@@ -130,7 +130,7 @@ def example_rpg_npc_memory():
         key_extractor=lambda x: x.player_id,
         llm_client=None,
         embedder=None,
-        merge_strategy=MergeStrategy.FIELD_MERGE,
+        merge_strategy=MergeStrategy.MERGE_FIELD,
     )
 
     # Add all encounter memories
