@@ -14,7 +14,7 @@ class BaseMem(ABC, Generic[T]):
 
     Defines the interface that all memory implementations must follow,
     including CRUD operations, indexing, and persistence.
-    
+
     Generic Parameters:
         T: The Pydantic model type for entities stored in memory.
     """
@@ -58,6 +58,11 @@ class BaseMem(ABC, Generic[T]):
         pass
 
     @abstractmethod
+    def clear_index(self) -> None:
+        """Wipe the vector index."""
+        pass
+
+    @abstractmethod
     def build_index(self, force: bool = False) -> None:
         """Build/rebuild the vector index."""
         pass
@@ -70,7 +75,7 @@ class BaseMem(ABC, Generic[T]):
     @abstractmethod
     def dump(self, folder_path: Union[str, Path]) -> None:
         """Save memory state to disk.
-        
+
         Args:
             folder_path: Directory path to save memory data.
         """
@@ -79,7 +84,7 @@ class BaseMem(ABC, Generic[T]):
     @abstractmethod
     def load(self, folder_path: Union[str, Path]) -> None:
         """Load memory state from disk.
-        
+
         Args:
             folder_path: Directory path to load memory data from.
         """

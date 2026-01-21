@@ -138,7 +138,6 @@ class OMem(BaseMem[T], Generic[T]):
 
         # 3. Vector Index State (LangChain FAISS wrapper)
         self._index: Optional[FAISS] = None  # FAISS vector store
-        self._index_dirty: bool = False  # Lazy indexing flag
 
         logger.debug(
             f"OMem initialized: schema={memory_schema.__name__}, "
@@ -226,7 +225,7 @@ class OMem(BaseMem[T], Generic[T]):
 
         # Mark index as stale
         if self._index is not None:
-            self._index_dirty = True
+            self.clear_index()
 
         logger.debug(
             f"Added {len(key_to_items)} unique keys to memory (size now: {self.size})"
@@ -244,7 +243,7 @@ class OMem(BaseMem[T], Generic[T]):
         if key in self._storage:
             del self._storage[key]
             if self._index is not None:
-                self._index_dirty = True
+                self.clear_index()
             logger.debug(f"Removed key {key} from memory (size now: {self.size})")
             return True
         return False
@@ -263,9 +262,13 @@ class OMem(BaseMem[T], Generic[T]):
     def clear(self) -> None:
         """Wipe all memory (reset to empty state)."""
         self._storage.clear()
-        self._index = None
-        self._index_dirty = False
+        self.clear_index()
         logger.info("Memory cleared")
+    
+    def clear_index(self) -> None:
+        """Clear the vector index without affecting stored items."""
+        self._index = None
+        logger.info("Vector index cleared")
 
     # --- Search & Indexing ---
 
@@ -275,7 +278,6 @@ class OMem(BaseMem[T], Generic[T]):
         This operation:
         1. Serializes all items as documents.
         2. Builds FAISS index via LangChain.
-        3. Resets dirty flag.
 
         Args:
             force: If True, rebuild even if index exists. Default: False.
@@ -296,8 +298,6 @@ class OMem(BaseMem[T], Generic[T]):
         logger.info(f"Building index for {len(items)} items...")
 
         if not items:
-            self._index = None
-            self._index_dirty = False
             logger.debug("No items to index")
             return
 
@@ -316,7 +316,6 @@ class OMem(BaseMem[T], Generic[T]):
         # 2. Build FAISS index
         try:
             self._index = FAISS.from_documents(documents, self.embedder)
-            self._index_dirty = False
             logger.info(f"Index built successfully with {len(documents)} items")
         except ImportError:
             logger.error(
@@ -327,7 +326,7 @@ class OMem(BaseMem[T], Generic[T]):
     def search(self, query: str, k: int = 5) -> List[T]:
         """Semantic search over memory using vector similarity.
 
-        Automatically rebuilds index if dirty. Returns entities ranked by
+        Automatically rebuilds index if not built. Returns entities ranked by
         similarity (closest first).
 
         Args:
@@ -346,8 +345,8 @@ class OMem(BaseMem[T], Generic[T]):
             )
 
         # Auto-rebuild if needed
-        if self._index_dirty or self._index is None:
-            logger.debug("Index is dirty or not built, rebuilding before search...")
+        if self._index is None:
+            logger.debug("Index is not built, rebuilding before search...")
             self.build_index()
 
         if self._index is None:
@@ -453,7 +452,6 @@ class OMem(BaseMem[T], Generic[T]):
                     self._index = FAISS.load_local(
                         index_path, self.embedder, allow_dangerous_deserialization=True
                     )
-                    self._index_dirty = False
                     logger.info(f"Vector index loaded from {index_path}")
                 except Exception as e:
                     logger.warning(f"Failed to load vector index: {e}")
