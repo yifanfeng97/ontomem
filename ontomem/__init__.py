@@ -19,7 +19,7 @@ from .merger import (
 )
 from .utils.logging import configure_logging, get_logger
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __author__ = "Yifan Feng"
 __email__ = "evanfeng97@gmail.com"
 
