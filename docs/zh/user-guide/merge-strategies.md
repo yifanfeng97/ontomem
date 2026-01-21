@@ -368,6 +368,87 @@ memory = OMem(
 
 ---
 
+## 控制 LLM 并发
+
+使用 LLM 驱动的合并策略时，OntoMem 会向你的 LLM 提供商发起批量 API 调用。默认情况下，这些请求可能并发进行，可能会触发速率限制或 API 限流。`max_workers` 参数允许你控制最大并发 LLM 请求数。
+
+### `max_workers` 参数
+
+使用 `max_workers` 限制并发 API 调用：
+
+```python
+from ontomem import OMem, MergeStrategy
+
+memory = OMem(
+    memory_schema=Profile,
+    key_extractor=lambda x: x.id,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.BALANCED,
+    max_workers=3  # 限制最多 3 个并发请求
+)
+```
+
+或使用 `create_merger`：
+
+```python
+from ontomem.merger import create_merger, MergeStrategy
+
+merger = create_merger(
+    strategy=MergeStrategy.LLM.BALANCED,
+    key_extractor=lambda x: x.id,
+    llm_client=llm,
+    item_schema=Profile,
+    max_workers=2  # 对被限流的账户采用更保守的配置
+)
+```
+
+### 配置建议
+
+| 场景 | 推荐值 | 说明 |
+|------|--------|------|
+| 开发/测试 | `2-3` | 保守配置，防止 API 错误 |
+| 生产（小规模） | `3-5` | 默认值：5。速度与安全的平衡 |
+| 生产（大规模） | `5-10+` | 取决于你的 LLM 提供商账户级别 |
+| API 被限流 | `1-2` | 最安全：串行或半并行处理 |
+
+### 调优指南
+
+1. **保守开始**：从 `max_workers=2` 开始确保稳定性
+2. **监测性能**：检查合并时间和错误率
+3. **逐步增加**：如果稳定，尝试更高的值
+4. **检查限制**：查看你的 OpenAI/提供商账户级别的速率限制（请求/分钟）
+5. **处理错误**：如果看到 `RateLimitError`，进一步降低 `max_workers`
+
+### 生产示例
+
+```python
+import os
+from ontomem import OMem, MergeStrategy
+
+# 从环境变量读取，便于在不修改代码的情况下调整
+max_workers = int(os.getenv("ONTOMEM_MAX_WORKERS", "3"))
+
+memory = OMem(
+    memory_schema=Profile,
+    key_extractor=lambda x: x.id,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.BALANCED,
+    max_workers=max_workers
+)
+```
+
+
+### 重要说明
+
+- **默认值**：`max_workers=5` 为大多数部署提供了良好的平衡
+- **经典策略不受影响**：`MERGE_FIELD`、`KEEP_INCOMING`、`KEEP_EXISTING` 不使用 LLM，不受此参数影响
+- **LLM 策略**：适用于 `LLM.BALANCED`、`LLM.PREFER_INCOMING`、`LLM.PREFER_EXISTING`、`LLM.CUSTOM_RULE`
+- **向后兼容**：所有现有代码继续使用默认值工作
+
+---
+
 ## 策略比较
 
 ```python

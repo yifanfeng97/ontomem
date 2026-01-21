@@ -25,6 +25,12 @@
 
 ## 📰 最新动态
 
+- **[2026-01-21] v0.1.5 发布**:
+  - **🎯 生产环境安全**: 新增 `max_workers` 参数控制 LLM 批量处理并发数
+  - **⚡ 防止 API 限流**: 有效防止触发 OpenAI 等 LLM 提供商的速率限制，避免账户被限制
+  - **🔧 细粒度并发控制**: 按合并策略自定义并发工作线程数（默认值: 5）
+  - [了解更多 →](user-guide/merge-strategies.md#llm-并发控制)
+
 - **[2026-01-19] v0.1.4 发布**:
   - **API 改进**: 将 `merge_strategy` 参数改名为 `strategy_or_merger`，更清晰且灵活
   - **增强功能**: 新增 `**kwargs` 支持，可直接通过 `OMem` 传入合并器特定参数（如 `CUSTOM_RULE` 的 `rule` 和 `dynamic_rule`），无需预配置

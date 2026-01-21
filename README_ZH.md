@@ -28,8 +28,15 @@
 
 **它不仅仅存储数据——它持续"消化"和"组织"数据。**
 
-
 ## 📰 最新动态
+<details>
+<summary>详情</summary>
+
+- **[2026-01-21] v0.1.5 发布**:
+  - **🎯 生产环境安全**: 新增 `max_workers` 参数控制 LLM 批量处理并发数
+  - **⚡ 防止 API 限流**: 有效防止触发 OpenAI 等 LLM 提供商的速率限制，避免账户被限制
+  - **🔧 细粒度并发控制**: 按合并策略自定义并发工作线程数（默认值: 5）
+  - [了解更多 →](docs/zh/user-guide/merge-strategies.md#llm_1)
 
 - **[2026-01-19] v0.1.4 发布**:
   - **API 改进**: 将 `merge_strategy` 参数改名为 `strategy_or_merger`，更清晰且灵活
@@ -45,6 +52,7 @@
     - `FIELD_MERGE` → `MERGE_FIELD`
   - [了解更多关于自定义规则](docs/zh/user-guide/merge-strategies.md#custom-rules)
 
+</details>
 
 ## ✨ 为什么选择 OntoMem？
 
@@ -90,6 +98,7 @@
 ```python
 from pydantic import BaseModel
 from ontomem import OMem
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 # 1. 定义你的记忆 schema
 class UserProfile(BaseModel):
@@ -97,10 +106,13 @@ class UserProfile(BaseModel):
     skills: list[str]
     last_seen: str
 
-# 2. 初始化（简单模式）
+# 2. 初始化（含 LLM 合并和并发控制，v0.1.5+）
 memory = OMem(
     memory_schema=UserProfile,
-    key_extractor=lambda x: x.name  # 唯一 ID
+    key_extractor=lambda x: x.name,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    max_workers=3  # 🆕 控制 LLM 批量处理的并发数，防止 API 限流
 )
 ```
 
@@ -323,6 +335,66 @@ print(result.prevention_tips)
 - LLM 策略无法覆盖的多因素决策
 
 </details>
+
+
+<details>
+<summary><b>⚡ 控制 LLM 并发（v0.1.5+）</b></summary>
+
+在使用 **LLM 驱动的合并策略**（`LLM.BALANCED`、`LLM.PREFER_INCOMING`、`LLM.PREFER_EXISTING`、`LLM.CUSTOM_RULE`）时，OntoMem 会向你的 LLM 提供商发起批量 API 调用。默认情况下，这些请求可能并发进行，这会导致触发速率限制或 API 限流。
+
+### 使用 `max_workers` 参数
+
+使用 `max_workers` 参数控制并发 LLM 请求的最大数量：
+
+```python
+memory = OMem(
+    memory_schema=UserProfile,
+    key_extractor=lambda x: x.uid,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.BALANCED,
+    max_workers=3  # 限制最多 3 个并发请求
+)
+```
+
+### 配置指南
+
+| 场景 | 推荐 `max_workers` | 说明 |
+|------|------------------|------|
+| **开发/测试** | `2-3` | 保守配置，防止 API 错误 |
+| **生产（小规模）** | `3-5` | 默认值：5。速度与安全的平衡 |
+| **生产（大规模）** | `5-10+` | 取决于你的 LLM 提供商账户级别 |
+| **API 被限流** | `1-2` | 最安全：串行或半并行处理 |
+
+### 调优技巧
+
+1. **保守开始**：从 `max_workers=2` 开始确保稳定性
+2. **监测性能**：检查合并时间和错误率
+3. **逐步增加**：如果稳定，尝试 `max_workers=5`，然后更高
+4. **检查限制**：验证你的 OpenAI 账户等级的速率限制（每分钟请求数）
+5. **观察错误**：如果看到 `RateLimitError`，降低 `max_workers`
+
+**示例：生产环保设置**
+```python
+import os
+
+# 从环境变量读取
+max_workers = int(os.getenv("ONTOMEM_MAX_WORKERS", 3))
+
+memory = OMem(
+    memory_schema=UserProfile,
+    key_extractor=lambda x: x.uid,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.BALANCED,
+    max_workers=max_workers  # 不修改代码即可调整
+)
+```
+
+> **注意**：`max_workers` 参数仅影响 LLM 驱动的合并策略。经典策略（`MERGE_FIELD`、`KEEP_INCOMING`、`KEEP_EXISTING`）不使用 LLM，不受影响。
+
+</details>
+
 
 ## 💾 保存与加载
 

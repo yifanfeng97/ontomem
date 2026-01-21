@@ -78,6 +78,7 @@ def create_merger(
     item_schema: type[T] | None = None,
     rule: str | None = None,
     dynamic_rule: Callable[[], str] | None = None,
+    max_workers: int = 5,
 ) -> BaseMerger:
     """Factory function to create merger instances.
 
@@ -91,6 +92,7 @@ def create_merger(
         item_schema: Pydantic model schema (required for LLM strategies). Defaults to None.
         rule: Static merge rule string (required for CUSTOM_RULE strategy). Defaults to None.
         dynamic_rule: Optional callable returning a string with runtime-specific rules. Defaults to None.
+        max_workers: Maximum concurrency for LLM batch calls (LLM strategies only). Defaults to 5.
 
     Returns:
         Configured BaseMerger instance.
@@ -107,14 +109,15 @@ def create_merger(
         ...     key_extractor=lambda x: x.id
         ... )
         >>> 
-        >>> # Custom rule merger
+        >>> # Custom rule merger with concurrency control
         >>> merger = create_merger(
         ...     strategy=MergeStrategy.LLM.CUSTOM_RULE,
         ...     key_extractor=lambda x: x.id,
         ...     llm_client=llm,
         ...     item_schema=MySchema,
         ...     rule="Prefer newer emails (incoming). Keep existing names.",
-        ...     dynamic_rule=lambda: f"Time context: {datetime.now()}"
+        ...     dynamic_rule=lambda: f"Time context: {datetime.now()}",
+        ...     max_workers=3  # Limit to 3 concurrent LLM calls
         ... )
     """
     # Strategy mapper: MergeStrategy value -> Merger class
@@ -166,6 +169,7 @@ def create_merger(
                 item_schema=item_schema,
                 rule=rule,
                 dynamic_rule=dynamic_rule,
+                max_workers=max_workers,
             )
 
         merger_cls = strategy_map[strategy]
@@ -173,6 +177,7 @@ def create_merger(
             key_extractor=key_extractor,
             llm_client=llm_client,
             item_schema=item_schema,
+            max_workers=max_workers,
         )
 
     # Classic strategies

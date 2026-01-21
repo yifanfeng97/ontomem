@@ -26,6 +26,12 @@ Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments
 
 ## 📰 News & Updates
 
+- **[2026-01-21] v0.1.5 Released**:
+  - **🎯 Production Safety**: Added `max_workers` parameter to control LLM batch processing concurrency
+  - **⚡ Rate Limit Protection**: Prevents hitting API rate limits from providers like OpenAI, preventing account throttling
+  - **🔧 Fine-Grained Control**: Customize concurrency per merge strategy (default: 5 workers)
+  - [Learn more →](user-guide/merge-strategies.md#controlling-llm-concurrency)
+
 - **[2026-01-19] v0.1.4 Released**:
   - **API Improvement**: Renamed `merge_strategy` parameter to `strategy_or_merger` for better clarity and flexibility
   - **Enhancement**: Added `**kwargs` support to directly pass merger-specific parameters (like `rule` and `dynamic_rule` for `CUSTOM_RULE`) through `OMem` without pre-configuration

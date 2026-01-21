@@ -32,6 +32,7 @@ class BaseLLMMerger(BaseMerger[T]):
         key_extractor: Callable[[T], Any],
         llm_client: BaseChatModel,
         item_schema: type[T],
+        max_workers: int = 5,
     ):
         """Initialize LLM merger.
 
@@ -39,10 +40,12 @@ class BaseLLMMerger(BaseMerger[T]):
             key_extractor: Function to extract unique key from an item.
             llm_client: LangChain LLM instance (e.g., ChatOpenAI).
             item_schema: Pydantic model class of items.
+            max_workers: Maximum concurrency for LLM batch calls. Defaults to 5.
         """
         super().__init__(key_extractor)
         self.llm_client = llm_client
         self.item_schema = item_schema
+        self.max_workers = max_workers
         self.logger = logger
 
     @property
@@ -129,7 +132,10 @@ class BaseLLMMerger(BaseMerger[T]):
 
         try:
             # Critical: Single batch API call for all pairs
-            merged_results = merge_chain.batch(inputs)
+            # Control max concurrency using max_workers parameter
+            config = {"max_concurrency": self.max_workers} if self.max_workers else None
+            merged_results = merge_chain.batch(inputs, config=config)
+            
             self.logger.info(f"Successfully batch merged {len(merged_results)} pairs")
             return merged_results
 

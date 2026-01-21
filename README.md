@@ -32,6 +32,14 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
 **It doesn't just store data—it continuously "digests" and "organizes" it.**
 
 ## 📰 News
+<details>
+<summary>Details</summary>
+
+- **[2026-01-21] v0.1.5 Released**:
+  - **🎯 Production Safety**: Added `max_workers` parameter to control LLM batch processing concurrency
+  - **⚡ Rate Limit Protection**: Prevents hitting API rate limits from providers like OpenAI, preventing account throttling
+  - **🔧 Fine-Grained Control**: Customize concurrency per merge strategy (default: 5 workers)
+  - [Learn more →](docs/en/user-guide/merge-strategies.md#controlling-llm-concurrency)
 
 - **[2026-01-19] v0.1.4 Released**:
   - **API Improvement**: Renamed `merge_strategy` parameter to `strategy_or_merger` for better clarity and flexibility
@@ -47,6 +55,7 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
     - `FIELD_MERGE` → `MERGE_FIELD`
   - [Learn more about Custom Rules](docs/en/user-guide/merge-strategies.md#custom-merge-rules)
 
+</details>
 
 ## ✨ Why OntoMem?
 
@@ -97,6 +106,7 @@ Build a structured memory store in 30 seconds.
 ```python
 from pydantic import BaseModel
 from ontomem import OMem
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 # 1. Define your memory schema
 class UserProfile(BaseModel):
@@ -104,10 +114,13 @@ class UserProfile(BaseModel):
     skills: list[str]
     last_seen: str
 
-# 2. Initialize (Simple mode)
+# 2. Initialize with LLM merging and concurrency control (v0.1.5+)
 memory = OMem(
     memory_schema=UserProfile,
-    key_extractor=lambda x: x.name  # Unique ID
+    key_extractor=lambda x: x.name,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    max_workers=3  # 🆕 Control LLM batch concurrency to prevent rate limits
 )
 ```
 
@@ -330,6 +343,64 @@ print(result.prevention_tips)
 
 </details>
 
+
+<details>
+<summary><b>⚡ Controlling LLM Concurrency (v0.1.5+)</b></summary>
+
+When using **LLM-based merge strategies** (`LLM.BALANCED`, `LLM.PREFER_INCOMING`, `LLM.PREFER_EXISTING`, `LLM.CUSTOM_RULE`), OntoMem makes batch API calls to your LLM provider. By default, these can run concurrently, which may hit rate limits or API throttling.
+
+### The `max_workers` Parameter
+
+Control the maximum number of concurrent LLM requests using the `max_workers` parameter:
+
+```python
+memory = OMem(
+    memory_schema=UserProfile,
+    key_extractor=lambda x: x.uid,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.BALANCED,
+    max_workers=3  # Limit to 3 concurrent requests
+)
+```
+
+### Configuration Guidelines
+
+| Scenario | Recommended `max_workers` | Rationale |
+|----------|---------------------------|-----------|
+| **Development/Testing** | `2-3` | Conservative, prevents API errors |
+| **Production (Small)** | `3-5` | Default: 5. Balanced speed/safety |
+| **Production (Large)** | `5-10+` | Depends on your LLM provider tier |
+| **Rate-Limited Accounts** | `1-2` | Safest: processes serially or semi-serially |
+
+### Tuning Tips
+
+1. **Start Conservative**: Begin with `max_workers=2` to ensure stability
+2. **Monitor Performance**: Check merge times and error rates
+3. **Gradually Increase**: If stable, try `max_workers=5`, then higher
+4. **Check Provider Limits**: Verify your OpenAI tier's rate limits (requests per minute)
+5. **Observe Errors**: If you see `RateLimitError`, reduce `max_workers`
+
+**Example: Production Setup**
+```python
+import os
+
+# Read from environment
+max_workers = int(os.getenv("ONTOMEM_MAX_WORKERS", 3))
+
+memory = OMem(
+    memory_schema=UserProfile,
+    key_extractor=lambda x: x.uid,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.BALANCED,
+    max_workers=max_workers  # Easy to adjust without code changes
+)
+```
+
+> **Note**: The `max_workers` parameter only affects LLM-based merge strategies. Classic strategies (`MERGE_FIELD`, `KEEP_INCOMING`, `KEEP_EXISTING`) do not use LLM and are not affected.
+
+</details>
 
 ## 💾 Save & Load
 

@@ -368,6 +368,87 @@ memory = OMem(
 
 ---
 
+## Controlling LLM Concurrency
+
+When using LLM-based merge strategies, OntoMem makes batch API calls to your LLM provider. By default, these requests can run concurrently, which may hit rate limits or API throttling. The `max_workers` parameter allows you to control the maximum number of concurrent LLM requests.
+
+### The `max_workers` Parameter
+
+Use `max_workers` to limit concurrent API calls:
+
+```python
+from ontomem import OMem, MergeStrategy
+
+memory = OMem(
+    memory_schema=Profile,
+    key_extractor=lambda x: x.id,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.BALANCED,
+    max_workers=3  # Limit to 3 concurrent requests
+)
+```
+
+Or with `create_merger`:
+
+```python
+from ontomem.merger import create_merger, MergeStrategy
+
+merger = create_merger(
+    strategy=MergeStrategy.LLM.BALANCED,
+    key_extractor=lambda x: x.id,
+    llm_client=llm,
+    item_schema=Profile,
+    max_workers=2  # More conservative for rate-limited accounts
+)
+```
+
+### Configuration Recommendations
+
+| Scenario | Recommended Value | Rationale |
+|----------|------------------|-----------|
+| Development/Testing | `2-3` | Conservative, prevents API errors |
+| Production (Small Scale) | `3-5` | Default: 5. Balanced speed/safety |
+| Production (Large Scale) | `5-10+` | Depends on your LLM provider tier |
+| Rate-Limited Accounts | `1-2` | Safest: processes serially or semi-serially |
+
+### Tuning Guidelines
+
+1. **Start Conservative**: Begin with `max_workers=2` to ensure stability
+2. **Monitor Performance**: Check merge times and error rates
+3. **Gradually Increase**: If stable, incrementally try higher values
+4. **Check Provider Limits**: Review your OpenAI/provider tier's rate limits (requests/minute)
+5. **Handle Errors**: If you see `RateLimitError`, reduce `max_workers` further
+
+### Production Example
+
+```python
+import os
+from ontomem import OMem, MergeStrategy
+
+# Read from environment for easy adjustment without code changes
+max_workers = int(os.getenv("ONTOMEM_MAX_WORKERS", "3"))
+
+memory = OMem(
+    memory_schema=Profile,
+    key_extractor=lambda x: x.id,
+    llm_client=ChatOpenAI(model="gpt-4o"),
+    embedder=OpenAIEmbeddings(),
+    strategy_or_merger=MergeStrategy.LLM.BALANCED,
+    max_workers=max_workers
+)
+```
+
+
+### Important Notes
+
+- **Default Value**: `max_workers=5` provides a good balance for most deployments
+- **Classic Strategies Unaffected**: `MERGE_FIELD`, `KEEP_INCOMING`, `KEEP_EXISTING` do not use LLM and are not affected by this parameter
+- **LLM Strategies**: Applies to `LLM.BALANCED`, `LLM.PREFER_INCOMING`, `LLM.PREFER_EXISTING`, `LLM.CUSTOM_RULE`
+- **Backward Compatible**: All existing code continues to work with the default value
+
+---
+
 ## Strategy Comparison
 
 ```python

@@ -42,6 +42,7 @@ class CustomRuleMerger(BaseLLMMerger):
         item_schema: type[BaseModel],
         rule: str,
         dynamic_rule: Optional[Callable[[], str]] = None,
+        max_workers: int = 5,
     ):
         """Initialize custom rule LLM merger.
 
@@ -52,12 +53,13 @@ class CustomRuleMerger(BaseLLMMerger):
             rule: Static string defining the core merge logic and rules.
             dynamic_rule: Optional callable that returns a string with runtime-specific
                          rules or context. Called each time system_prompt is accessed.
+            max_workers: Maximum concurrency for LLM batch calls. Defaults to 5.
 
         Raises:
             TypeError: If rule is not a string.
             TypeError: If dynamic_rule is provided but not callable.
         """
-        super().__init__(key_extractor, llm_client, item_schema)
+        super().__init__(key_extractor, llm_client, item_schema, max_workers)
 
         if not isinstance(rule, str):
             raise TypeError(f"rule must be str, got {type(rule)}")
