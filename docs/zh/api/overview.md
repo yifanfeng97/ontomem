@@ -120,6 +120,14 @@ all_entities = memory.items  # List[T]
 count = memory.size  # int
 ```
 
+#### `empty`
+检查记忆是否为空。
+
+```python
+if memory.empty:
+    print("内存中没有实体")
+```
+
 ---
 
 ## 枚举

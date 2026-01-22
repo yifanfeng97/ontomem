@@ -1322,7 +1322,7 @@ wheels = [
 
 [[package]]
 name = "ontomem"
-version = "0.1.5"
+version = "0.1.8"
 source = { editable = "." }
 dependencies = [
     { name = "faiss-cpu" },
@@ -1331,6 +1331,7 @@ dependencies = [
     { name = "langchain-openai" },
     { name = "loguru" },
     { name = "pydantic" },
+    { name = "pytest" },
     { name = "python-dotenv" },
 ]
 
@@ -1365,6 +1366,7 @@ requires-dist = [
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pymdown-extensions", marker = "extra == 'dev'", specifier = ">=10.0" },
+    { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.2" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
 ]

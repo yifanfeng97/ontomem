@@ -31,6 +31,31 @@ class TestOMemBasicOperations:
         assert memory.size == 0
         assert memory.keys == []
         assert memory.items == []
+        assert memory.empty is True
+
+    def test_empty_property(self, memory):
+        """Test empty property."""
+        # Initially empty
+        assert memory.empty is True
+        
+        # After adding, not empty
+        memory.add(SimpleItem(item_id="1", name="Alice"))
+        assert memory.empty is False
+        assert memory.size == 1
+        
+        # After removing, empty again
+        memory.remove("1")
+        assert memory.empty is True
+        assert memory.size == 0
+        
+        # After clearing, empty
+        memory.add([
+            SimpleItem(item_id="1", name="Alice"),
+            SimpleItem(item_id="2", name="Bob"),
+        ])
+        assert memory.empty is False
+        memory.clear()
+        assert memory.empty is True
 
     def test_add_single_item(self, memory):
         """Test adding a single item."""

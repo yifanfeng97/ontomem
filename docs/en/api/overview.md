@@ -120,6 +120,14 @@ Get count of entities.
 count = memory.size  # int
 ```
 
+#### `empty`
+Check if memory is empty.
+
+```python
+if memory.empty:
+    print("No entities in memory")
+```
+
 ---
 
 ## Enumerations

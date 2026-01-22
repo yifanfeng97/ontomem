@@ -37,6 +37,15 @@ class BaseMem(ABC, Generic[T]):
         """Return the number of entities in memory."""
         pass
 
+    @property
+    def empty(self) -> bool:
+        """Check if memory is empty.
+
+        Returns:
+            True if no entities in memory, False otherwise.
+        """
+        return self.size == 0
+
     @abstractmethod
     def add(self, items: Union[T, List[T]]) -> None:
         """Add item(s) to memory."""

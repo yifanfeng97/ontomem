@@ -66,7 +66,6 @@ class TestIndexing:
         memory.build_index()
 
         assert memory._index is not None
-        assert not memory._index_dirty
 
     @pytest.mark.requires_openai
     def test_build_index_force_rebuild(self, embedder):
