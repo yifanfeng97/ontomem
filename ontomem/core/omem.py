@@ -82,7 +82,9 @@ class OMem(BaseMem[T], Generic[T]):
         llm_client: BaseChatModel,
         embedder: Embeddings,
         *,
-        strategy_or_merger: Union[MergeStrategy, BaseMerger] = MergeStrategy.LLM.BALANCED,
+        strategy_or_merger: Union[
+            MergeStrategy, BaseMerger
+        ] = MergeStrategy.LLM.BALANCED,
         fields_for_index: Optional[List[str]] = None,
         verbose: bool = False,
         **kwargs: Any,
@@ -120,7 +122,7 @@ class OMem(BaseMem[T], Generic[T]):
             if kwargs:
                 logger.warning(
                     "Initialized with a Merger instance. Additional kwargs are ignored: %s",
-                    list(kwargs.keys())
+                    list(kwargs.keys()),
                 )
             self._merger = strategy_or_merger
         else:
@@ -264,7 +266,7 @@ class OMem(BaseMem[T], Generic[T]):
         self._storage.clear()
         self.clear_index()
         logger.info("Memory cleared")
-    
+
     def clear_index(self) -> None:
         """Clear the vector index without affecting stored items."""
         self._index = None
@@ -373,93 +375,135 @@ class OMem(BaseMem[T], Generic[T]):
             logger.error(f"Search failed: {e}")
             return []
 
-    # --- Persistence ---
+    # --- Persistence (Fine-grained v0.1.5+) ---
 
-    def dump(self, folder_path: Union[str, Path]) -> None:
-        """Save memory state to disk.
-
-        Saves to the folder:
-            1. Structured data (memory items) - saved as memory.json
-            2. Vector index (if built) - saved as FAISS index files
+    def dump_data(self, filename: Union[str, Path]) -> None:
+        """Save structured data to a JSON file (data only).
 
         Args:
-            folder_path: Directory path to save memory data.
+            filename: File path to save the data (e.g., "memory.json").
         """
-        folder_path = Path(folder_path)
-        folder_path.mkdir(parents=True, exist_ok=True)
+        filename = Path(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            # 1. Save structured data
-            data_file = folder_path / "memory.json"
             data = [item.model_dump(mode="json") for item in self.items]
-            with open(data_file, "w", encoding="utf-8") as f:
+            with open(filename, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False, default=str)
-            logger.info(f"Memory data persisted to {data_file}")
+            logger.info(f"Memory data persisted to {filename}")
+        except Exception as e:
+            logger.error(f"Failed to persist memory data: {e}")
+            raise
 
-            # 2. Save metadata
-            metadata_file = folder_path / "metadata.json"
+    def dump_index(self, folder_path: Union[str, Path]) -> None:
+        """Save vector index to a folder.
+
+        Index files will be saved directly in this folder.
+
+        Args:
+            folder_path: Folder path where index files will be saved.
+        """
+        folder_path = Path(folder_path)
+
+        if self._index is None:
+            logger.debug("No index to save (index not built)")
+            return
+
+        try:
+            folder_path.mkdir(parents=True, exist_ok=True)
+            self._index.save_local(str(folder_path))
+            logger.info(f"Vector index persisted to {folder_path}")
+        except Exception as e:
+            logger.warning(f"Failed to save vector index: {e}")
+            raise
+
+    def load_data(self, filename: Union[str, Path]) -> None:
+        """Load structured data from a JSON file.
+
+        Args:
+            filename: File path to load the data from.
+        """
+        filename = Path(filename)
+
+        try:
+            if not filename.exists():
+                raise FileNotFoundError(f"Memory data file not found: {filename}")
+
+            with open(filename, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            items = [self.memory_schema(**d) for d in data]
+            self.add(items)
+            logger.info(f"Memory loaded from {filename} ({len(items)} items)")
+
+        except Exception as e:
+            logger.error(f"Failed to load memory data: {e}")
+            raise
+
+    def load_index(self, folder_path: Union[str, Path]) -> None:
+        """Load vector index from a folder.
+
+        Args:
+            folder_path: Folder path containing index files.
+        """
+        folder_path = Path(folder_path)
+
+        if not folder_path.exists():
+            logger.debug(f"No index folder found at {folder_path}, skipping")
+            return
+
+        try:
+            self._index = FAISS.load_local(
+                str(folder_path), self.embedder, allow_dangerous_deserialization=True
+            )
+            logger.info(f"Vector index loaded from {folder_path}")
+        except Exception as e:
+            logger.warning(f"Failed to load vector index: {e}")
+            self._index = None
+            raise
+
+    def dump_metadata(self, filename: Union[str, Path]) -> None:
+        """Save metadata to a JSON file.
+
+        Args:
+            filename: File path to save metadata.
+        """
+        filename = Path(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
             metadata = {
                 "schema_name": self.memory_schema.__name__,
                 "size": self.size,
                 "fields_for_index": self.fields_for_index,
             }
-            with open(metadata_file, "w", encoding="utf-8") as f:
+            with open(filename, "w", encoding="utf-8") as f:
                 json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
-            logger.info(f"Metadata persisted to {metadata_file}")
-
-            # 3. Save vector index (if available)
-            if self._index is not None:
-                try:
-                    index_path = str(folder_path / "faiss_index")
-                    self._index.save_local(index_path)
-                    logger.info(f"Vector index persisted to {index_path}")
-                except Exception as e:
-                    logger.warning(f"Failed to save vector index: {e}")
-
+            logger.info(f"Metadata persisted to {filename}")
         except Exception as e:
-            logger.error(f"Failed to persist memory: {e}")
-            raise
+            logger.warning(f"Failed to persist metadata: {e}")
 
-    def load(self, folder_path: Union[str, Path]) -> None:
-        """Load memory state from disk.
-
-        Loads from the folder:
-            1. Structured data (memory items) - loaded from memory.json
-            2. Vector index (if available) - loaded from FAISS index files
+    def load_metadata(self, filename: Union[str, Path]) -> None:
+        """Load metadata from a JSON file.
 
         Args:
-            folder_path: Directory path to load memory data from.
+            filename: File path to load metadata from.
         """
-        folder_path = Path(folder_path)
+        filename = Path(filename)
+
+        if not filename.exists():
+            logger.debug(f"Metadata file not found: {filename}, skipping")
+            return
 
         try:
-            # 1. Load structured data
-            data_file = folder_path / "memory.json"
-            if not data_file.exists():
-                raise FileNotFoundError(f"Memory data file not found: {data_file}")
-
-            with open(data_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            items = [self.memory_schema(**d) for d in data]
-            self.add(items)
-            logger.info(f"Memory loaded from {data_file} ({len(items)} items)")
-
-            # 2. Load vector index (if available)
-            index_path = str(folder_path / "faiss_index")
-            if Path(index_path).exists():
-                try:
-                    self._index = FAISS.load_local(
-                        index_path, self.embedder, allow_dangerous_deserialization=True
-                    )
-                    logger.info(f"Vector index loaded from {index_path}")
-                except Exception as e:
-                    logger.warning(f"Failed to load vector index: {e}")
-                    self._index = None
-
+            with open(filename, "r", encoding="utf-8") as f:
+                metadata = json.load(f)
+            logger.info(f"Metadata loaded from {filename}")
+            logger.debug(
+                f"Schema: {metadata.get('schema_name')}, Size: {metadata.get('size')}"
+            )
         except Exception as e:
-            logger.error(f"Failed to load memory: {e}")
-            raise
+            logger.warning(f"Failed to load metadata: {e}")
 
     # --- Private Helpers ---
 
