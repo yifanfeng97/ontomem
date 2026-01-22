@@ -83,7 +83,7 @@ Fast, exact match. Use when you know the unique key.
 
 ```python
 memory.build_index()
-results = memory.search("deep learning neural networks", k=5)
+results = memory.search("deep learning neural networks", top_k=5)
 ```
 
 Uses embeddings to find semantically similar entities. Great for discovery.

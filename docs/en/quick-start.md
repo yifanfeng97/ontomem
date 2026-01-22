@@ -124,7 +124,7 @@ print(profile.research_interests)
 memory.build_index()
 
 # Now search by semantic meaning
-results = memory.search("machine learning neural networks", k=5)
+results = memory.search("machine learning neural networks", top_k=5)
 
 for researcher in results:
     print(f"- {researcher.name}: {researcher.research_interests}")

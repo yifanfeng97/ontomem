@@ -92,7 +92,7 @@ entity = memory.get("john_doe")
 
 # 2. 语义搜索（需要索引）
 memory.build_index()
-results = memory.search("人工智能研究", k=5)
+results = memory.search("人工智能研究", top_k=5)
 ```
 
 ### Q: 我必须构建索引才能使用记忆吗？

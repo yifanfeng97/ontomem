@@ -73,12 +73,12 @@ memory.build_index(force=True)  # Force rebuild
 Semantic search over entities.
 
 ```python
-results = memory.search("deep learning neural networks", k=10)
+results = memory.search("deep learning neural networks", top_k=10)
 ```
 
 **Parameters:**
 - `query` (str): Natural language search query
-- `k` (int): Number of results
+- `top_k` (int): Number of results
 
 **Returns:** List of top-k entities by semantic similarity
 

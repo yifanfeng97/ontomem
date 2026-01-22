@@ -230,7 +230,7 @@ memory.add(DailyTrace(user="Alice", date="2024-01-02", actions=["Login"]))
 # - alice_2024-01-02: actions=["Login"], summary="简短会话..."
 
 # 跨时间的语义搜索
-results = memory.search("Alice 什么时候感到沮丧？", k=1)
+results = memory.search("Alice 什么时候感到沮丧？", top_k=1)
 ```
 
 完整的工作示例，见 [examples/06_temporal_memory_consolidation.py](examples/06_temporal_memory_consolidation.py)
@@ -247,7 +247,7 @@ results = memory.search("Alice 什么时候感到沮丧？", k=1)
 experience_memory.build_index()
 
 # 语义搜索
-results = experience_memory.search("调试 Python 异常堆栈溢出", k=5)
+results = experience_memory.search("调试 Python 异常堆栈溢出", top_k=5)
 
 for experience in results:
     print(f"- {experience.error_signature}")

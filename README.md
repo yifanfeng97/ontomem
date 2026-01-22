@@ -238,7 +238,7 @@ memory.add(DailyTrace(user="Alice", date="2024-01-02", actions=["Login"]))
 # - alice_2024-01-02: actions=["Login"], summary="Brief session..."
 
 # Semantic search across time
-results = memory.search("When was Alice frustrated?", k=1)
+results = memory.search("When was Alice frustrated?", top_k=1)
 ```
 
 For a complete working example, see [examples/06_temporal_memory_consolidation.py](examples/06_temporal_memory_consolidation.py)

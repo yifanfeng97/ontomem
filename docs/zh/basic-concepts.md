@@ -83,7 +83,7 @@ researcher = memory.get("Yann LeCun")
 
 ```python
 memory.build_index()
-results = memory.search("深度学习神经网络", k=5)
+results = memory.search("深度学习神经网络", top_k=5)
 ```
 
 使用嵌入来查找语义相似的实体。非常适合发现。

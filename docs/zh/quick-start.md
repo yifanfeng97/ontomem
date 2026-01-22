@@ -124,7 +124,7 @@ print(profile.research_interests)
 memory.build_index()
 
 # 现在可以按语义搜索
-results = memory.search("机器学习神经网络", k=5)
+results = memory.search("机器学习神经网络", top_k=5)
 
 for researcher in results:
     print(f"- {researcher.name}: {researcher.research_interests}")

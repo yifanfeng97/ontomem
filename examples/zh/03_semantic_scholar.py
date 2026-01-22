@@ -220,7 +220,7 @@ def example_semantic_scholar():
         print(f"\n   查询：'{query}'")
         try:
             # 尝试语义搜索
-            results = library.search(query, k=2)
+            results = library.search(query, top_k=2)
             if results:
                 print("   结果（按语义相似性排序）：")
                 for i, paper_result in enumerate(results, 1):

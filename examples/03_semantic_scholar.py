@@ -220,7 +220,7 @@ def example_semantic_scholar():
         print(f"\n   Query: '{query}'")
         try:
             # Attempt semantic search
-            results = library.search(query, k=2)
+            results = library.search(query, top_k=2)
             if results:
                 print("   Results (by semantic similarity):")
                 for i, paper_result in enumerate(results, 1):

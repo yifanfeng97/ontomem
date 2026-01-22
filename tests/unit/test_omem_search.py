@@ -146,7 +146,7 @@ class TestSearch:
         if memory_with_index is None:
             pytest.skip("Memory with index not available")
         
-        results = memory_with_index.search("Python programming", k=2)
+        results = memory_with_index.search("Python programming", top_k=2)
 
         assert len(results) <= 2
         # Should return Document objects
@@ -171,8 +171,8 @@ class TestSearch:
         if memory_with_index is None:
             pytest.skip("Memory with index not available")
         
-        results_k1 = memory_with_index.search("Python", k=1)
-        results_k3 = memory_with_index.search("Python", k=3)
+        results_k1 = memory_with_index.search("Python", top_k=1)
+        results_k3 = memory_with_index.search("Python", top_k=3)
 
         assert len(results_k1) <= 1
         assert len(results_k3) <= 3

@@ -92,7 +92,7 @@ entity = memory.get("john_doe")
 
 # 2. Semantic search (requires index)
 memory.build_index()
-results = memory.search("artificial intelligence research", k=5)
+results = memory.search("artificial intelligence research", top_k=5)
 ```
 
 ### Q: Do I have to build an index to use memory?

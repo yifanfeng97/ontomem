@@ -143,7 +143,7 @@ def example_temporal_consolidation():
     print("="*70)
     query = "用户什么时候感到沮丧或遇到问题了？"
     print(f"\n查询: '{query}'")
-    results = memory.search(query, k=1)
+    results = memory.search(query, top_k=1)
     
     if results:
         for trace in results:

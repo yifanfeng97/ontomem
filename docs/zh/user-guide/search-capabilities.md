@@ -22,7 +22,7 @@ if researcher:
 
 ```python
 memory.build_index()
-results = memory.search("深度学习研究论文", k=5)
+results = memory.search("深度学习研究论文", top_k=5)
 
 for result in results:
     print(result.name, result.research_focus)
@@ -45,12 +45,12 @@ memory.build_index(force=True)
 ```python
 results = memory.search(
     query="人工智能",  # 自然语言查询
-    k=10                # 返回前 10 个结果
+    top_k=10                # 返回前 10 个结果
 )
 ```
 
 - **query**：描述你要查找内容的自然语言字符串
-- **k**：返回的前 k 个结果数量（默认：5）
+- **top_k**：返回的前 k 个结果数量（默认：5）
 
 ---
 
@@ -58,7 +58,7 @@ results = memory.search(
 
 ```python
 # 首先，使用语义搜索缩小范围
-candidates = memory.search("机器学习", k=20)
+candidates = memory.search("机器学习", top_k=20)
 
 # 然后，使用精确查询验证
 specific = memory.get("Yann LeCun")

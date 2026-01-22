@@ -22,7 +22,7 @@ Find entities by meaning, not exact keys:
 
 ```python
 memory.build_index()
-results = memory.search("deep learning research papers", k=5)
+results = memory.search("deep learning research papers", top_k=5)
 
 for result in results:
     print(result.name, result.research_focus)
@@ -45,12 +45,12 @@ memory.build_index(force=True)
 ```python
 results = memory.search(
     query="artificial intelligence",  # Natural language query
-    k=10                              # Return top 10 results
+    top_k=10                              # Return top 10 results
 )
 ```
 
 - **query**: Natural language string describing what you're looking for
-- **k**: Number of top results to return (default: 5)
+- **top_k**: Number of top results to return (default: 5)
 
 ---
 
@@ -58,7 +58,7 @@ results = memory.search(
 
 ```python
 # First, narrow with semantic search
-candidates = memory.search("machine learning", k=20)
+candidates = memory.search("machine learning", top_k=20)
 
 # Then, verify with exact lookup
 specific = memory.get("Yann LeCun")

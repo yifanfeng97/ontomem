@@ -73,12 +73,12 @@ memory.build_index(force=True)  # 强制重建
 在实体上进行语义搜索。
 
 ```python
-results = memory.search("深度学习神经网络", k=10)
+results = memory.search("深度学习神经网络", top_k=10)
 ```
 
 **参数：**
 - `query` (str)：自然语言搜索查询
-- `k` (int)：结果数量
+- `top_k` (int)：结果数量
 
 **返回：** 按语义相似性排名的前 k 个实体
 

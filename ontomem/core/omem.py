@@ -323,7 +323,7 @@ class OMem(BaseMem[T], Generic[T]):
             )
             raise
 
-    def search(self, query: str, k: int = 5) -> List[T]:
+    def search(self, query: str, top_k: int = 5) -> List[T]:
         """Semantic search over memory using vector similarity.
 
         Automatically rebuilds index if not built. Returns entities ranked by
@@ -331,7 +331,7 @@ class OMem(BaseMem[T], Generic[T]):
 
         Args:
             query: Natural language query string.
-            k: Number of results to return. Default: 5.
+            top_k: Number of results to return. Default: 5.
 
         Returns:
             List of entities ranked by similarity.
@@ -355,7 +355,7 @@ class OMem(BaseMem[T], Generic[T]):
 
         # Search using FAISS
         try:
-            docs = self._index.similarity_search(query, k=k)
+            docs = self._index.similarity_search(query, k=top_k)
             results = []
 
             for doc in docs:
