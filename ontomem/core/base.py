@@ -75,11 +75,11 @@ class BaseMem(ABC, Generic[T]):
     # --- Fine-grained Persistence (v0.1.5+) ---
 
     @abstractmethod
-    def dump_data(self, filename: Union[str, Path]) -> None:
+    def dump_data(self, file_path: Union[str, Path]) -> None:
         """Save structured data to a JSON file (data only).
 
         Args:
-            filename: File path to save the data (e.g., "memory.json").
+            file_path: File path to save the data (e.g., "memory.json").
         """
         pass
 
@@ -93,11 +93,11 @@ class BaseMem(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def load_data(self, filename: Union[str, Path]) -> None:
+    def load_data(self, file_path: Union[str, Path]) -> None:
         """Load structured data from a JSON file.
 
         Args:
-            filename: File path to load the data from.
+            file_path: File path to load the data from.
         """
         pass
 
@@ -111,20 +111,20 @@ class BaseMem(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def dump_metadata(self, filename: Union[str, Path]) -> None:
+    def dump_metadata(self, file_path: Union[str, Path]) -> None:
         """Save metadata to a JSON file.
 
         Args:
-            filename: File path to save metadata.
+            file_path: File path to save metadata.
         """
         pass
 
     @abstractmethod
-    def load_metadata(self, filename: Union[str, Path]) -> None:
+    def load_metadata(self, file_path: Union[str, Path]) -> None:
         """Load metadata from a JSON file.
 
         Args:
-            filename: File path to load metadata from.
+            file_path: File path to load metadata from.
         """
         pass
 

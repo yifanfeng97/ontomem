@@ -12,8 +12,8 @@ memory.dump("./my_memory")
 
 This creates:
 - `memory.json` - Your serialized entities
-- `faiss.index` - Vector index (if built)
-- `metadata.json` - Configuration and timestamps
+- `faiss_index/` - Vector index directory (if built)
+- `metadata.json` - Configuration and metadata
 
 ## Loading Memory
 
@@ -39,9 +39,62 @@ print(new_memory.size)  # Shows number of entities
 
 ```
 my_memory/
-├── memory.json       # Serialized entities
-├── faiss.index       # FAISS vector index
-└── metadata.json     # Configuration
+├── memory.json           # Serialized entities
+├── metadata.json         # Configuration and metadata
+└── faiss_index/          # Vector index directory (if built)
+    ├── index.faiss
+    └── docstore.pkl
+```
+
+## Fine-grained Persistence (v0.1.5+)
+
+For more control over what gets saved, use the granular methods:
+
+### Save Only Data
+```python
+# Save just the structured data, no index or metadata
+memory.dump_data("./my_data.json")
+```
+
+### Save Only Index
+```python
+# Save just the vector index
+memory.dump_index("./my_index_folder")
+```
+
+### Save Only Metadata
+```python
+# Save just the metadata
+memory.dump_metadata("./my_metadata.json")
+```
+
+### Load Only Data
+```python
+# Load just the structured data
+new_memory.load_data("./my_data.json")
+```
+
+### Load Only Index
+```python
+# Load just the vector index
+new_memory.load_index("./my_index_folder")
+```
+
+### Load Only Metadata
+```python
+# Load just the metadata
+new_memory.load_metadata("./my_metadata.json")
+```
+
+### Selective Backup Strategy
+```python
+# Back up data and index separately
+memory.dump_data("./backups/data_v1.json")
+memory.dump_index("./backups/index_v1")
+
+# Only restore data, rebuild index fresh
+new_memory.load_data("./backups/data_v1.json")
+new_memory.build_index()
 ```
 
 ## Backup & Recovery

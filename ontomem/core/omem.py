@@ -377,20 +377,20 @@ class OMem(BaseMem[T], Generic[T]):
 
     # --- Persistence (Fine-grained v0.1.5+) ---
 
-    def dump_data(self, filename: Union[str, Path]) -> None:
+    def dump_data(self, file_path: Union[str, Path]) -> None:
         """Save structured data to a JSON file (data only).
 
         Args:
-            filename: File path to save the data (e.g., "memory.json").
+            file_path: File path to save the data (e.g., "memory.json").
         """
-        filename = Path(filename)
-        filename.parent.mkdir(parents=True, exist_ok=True)
+        file_path = Path(file_path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             data = [item.model_dump(mode="json") for item in self.items]
-            with open(filename, "w", encoding="utf-8") as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False, default=str)
-            logger.info(f"Memory data persisted to {filename}")
+            logger.info(f"Memory data persisted to {file_path}")
         except Exception as e:
             logger.error(f"Failed to persist memory data: {e}")
             raise
@@ -417,24 +417,24 @@ class OMem(BaseMem[T], Generic[T]):
             logger.warning(f"Failed to save vector index: {e}")
             raise
 
-    def load_data(self, filename: Union[str, Path]) -> None:
+    def load_data(self, file_path: Union[str, Path]) -> None:
         """Load structured data from a JSON file.
 
         Args:
-            filename: File path to load the data from.
+            file_path: File path to load the data from.
         """
-        filename = Path(filename)
+        file_path = Path(file_path)
 
         try:
-            if not filename.exists():
-                raise FileNotFoundError(f"Memory data file not found: {filename}")
+            if not file_path.exists():
+                raise FileNotFoundError(f"Memory data file not found: {file_path}")
 
-            with open(filename, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
             items = [self.memory_schema(**d) for d in data]
             self.add(items)
-            logger.info(f"Memory loaded from {filename} ({len(items)} items)")
+            logger.info(f"Memory loaded from {file_path} ({len(items)} items)")
 
         except Exception as e:
             logger.error(f"Failed to load memory data: {e}")
@@ -462,14 +462,14 @@ class OMem(BaseMem[T], Generic[T]):
             self._index = None
             raise
 
-    def dump_metadata(self, filename: Union[str, Path]) -> None:
+    def dump_metadata(self, file_path: Union[str, Path]) -> None:
         """Save metadata to a JSON file.
 
         Args:
-            filename: File path to save metadata.
+            file_path: File path to save metadata.
         """
-        filename = Path(filename)
-        filename.parent.mkdir(parents=True, exist_ok=True)
+        file_path = Path(file_path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             metadata = {
@@ -477,28 +477,28 @@ class OMem(BaseMem[T], Generic[T]):
                 "size": self.size,
                 "fields_for_index": self.fields_for_index,
             }
-            with open(filename, "w", encoding="utf-8") as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
-            logger.info(f"Metadata persisted to {filename}")
+            logger.info(f"Metadata persisted to {file_path}")
         except Exception as e:
             logger.warning(f"Failed to persist metadata: {e}")
 
-    def load_metadata(self, filename: Union[str, Path]) -> None:
+    def load_metadata(self, file_path: Union[str, Path]) -> None:
         """Load metadata from a JSON file.
 
         Args:
-            filename: File path to load metadata from.
+            file_path: File path to load metadata from.
         """
-        filename = Path(filename)
+        file_path = Path(file_path)
 
-        if not filename.exists():
-            logger.debug(f"Metadata file not found: {filename}, skipping")
+        if not file_path.exists():
+            logger.debug(f"Metadata file not found: {file_path}, skipping")
             return
 
         try:
-            with open(filename, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 metadata = json.load(f)
-            logger.info(f"Metadata loaded from {filename}")
+            logger.info(f"Metadata loaded from {file_path}")
             logger.debug(
                 f"Schema: {metadata.get('schema_name')}, Size: {metadata.get('size')}"
             )
