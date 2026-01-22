@@ -1,6 +1,6 @@
 [project]
 name = "ontomem"
-version = "0.1.7"
+version = "0.1.8"
 description = "A self-consolidating memory layer for AI agents with schema-first design, intelligent merging, and hybrid search capabilities"
 readme = "README.md"
 license = { text = "Apache-2.0" }
