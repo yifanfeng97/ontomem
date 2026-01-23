@@ -120,12 +120,22 @@ all_entities = memory.items  # List[T]
 count = memory.size  # int
 ```
 
-#### `empty`
+#### `empty()`
 检查记忆是否为空。
 
 ```python
-if memory.empty:
+if memory.empty():
     print("内存中没有实体")
+```
+
+#### `has_index()`
+检查向量索引是否已构建。
+
+```python
+if memory.has_index():
+    results = memory.search("查询")
+else:
+    print("请先使用 memory.build_index() 构建索引")
 ```
 
 ---

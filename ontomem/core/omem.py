@@ -164,6 +164,14 @@ class OMem(BaseMem[T], Generic[T]):
         """Return the number of entities in memory."""
         return len(self._storage)
 
+    def has_index(self) -> bool:
+        """Check if vector index is currently built.
+
+        Returns:
+            True if index exists, False otherwise.
+        """
+        return self._index is not None
+
     # --- CRUD Operations ---
 
     def add(self, items: Union[T, List[T]]) -> None:

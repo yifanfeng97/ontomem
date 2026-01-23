@@ -120,12 +120,22 @@ Get count of entities.
 count = memory.size  # int
 ```
 
-#### `empty`
+#### `empty()`
 Check if memory is empty.
 
 ```python
-if memory.empty:
+if memory.empty():
     print("No entities in memory")
+```
+
+#### `has_index()`
+Check if vector index has been built.
+
+```python
+if memory.has_index():
+    results = memory.search("query")
+else:
+    print("Please build index first with memory.build_index()")
 ```
 
 ---

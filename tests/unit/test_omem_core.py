@@ -31,21 +31,21 @@ class TestOMemBasicOperations:
         assert memory.size == 0
         assert memory.keys == []
         assert memory.items == []
-        assert memory.empty is True
+        assert memory.empty() is True
 
-    def test_empty_property(self, memory):
-        """Test empty property."""
+    def test_empty_method(self, memory):
+        """Test empty method."""
         # Initially empty
-        assert memory.empty is True
+        assert memory.empty() is True
         
         # After adding, not empty
         memory.add(SimpleItem(item_id="1", name="Alice"))
-        assert memory.empty is False
+        assert memory.empty() is False
         assert memory.size == 1
         
         # After removing, empty again
         memory.remove("1")
-        assert memory.empty is True
+        assert memory.empty() is True
         assert memory.size == 0
         
         # After clearing, empty
@@ -53,9 +53,37 @@ class TestOMemBasicOperations:
             SimpleItem(item_id="1", name="Alice"),
             SimpleItem(item_id="2", name="Bob"),
         ])
-        assert memory.empty is False
+        assert memory.empty() is False
         memory.clear()
-        assert memory.empty is True
+        assert memory.empty() is True
+
+    def test_has_index(self, memory):
+        """Test has_index method."""
+        # Initially no index
+        assert memory.has_index() is False
+        
+        # Manually set _index to simulate index being built
+        # (we don't build actual index here to avoid needing embedder)
+        from langchain_community.vectorstores import FAISS
+        
+        # Create a dummy document list
+        from langchain_core.documents import Document as LCDocument
+        dummy_docs = [
+            LCDocument(page_content="test1", metadata={"key": "1"}),
+            LCDocument(page_content="test2", metadata={"key": "2"}),
+        ]
+        
+        # For testing purposes, we'll skip the actual index building
+        # and just test the has_index() method's logic
+        assert memory.has_index() is False
+        
+        # Now set _index directly for testing
+        memory._index = True  # Using a truthy value to avoid needing FAISS
+        assert memory.has_index() is True
+        
+        # Clear index
+        memory._index = None
+        assert memory.has_index() is False
 
     def test_add_single_item(self, memory):
         """Test adding a single item."""

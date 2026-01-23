@@ -37,7 +37,6 @@ class BaseMem(ABC, Generic[T]):
         """Return the number of entities in memory."""
         pass
 
-    @property
     def empty(self) -> bool:
         """Check if memory is empty.
 
@@ -45,6 +44,15 @@ class BaseMem(ABC, Generic[T]):
             True if no entities in memory, False otherwise.
         """
         return self.size == 0
+
+    @abstractmethod
+    def has_index(self) -> bool:
+        """Check if vector index has been built.
+
+        Returns:
+            True if index exists and is ready for search.
+        """
+        pass
 
     @abstractmethod
     def add(self, items: Union[T, List[T]]) -> None:
