@@ -1,7 +1,7 @@
 """
 OMem Examples - Practical Use Cases
 
-This directory contains 5 comprehensive examples demonstrating different capabilities
+This directory contains 7 comprehensive examples demonstrating different capabilities
 and patterns of using OMem for intelligent memory consolidation.
 
 **Available Languages:**
@@ -96,6 +96,25 @@ multi-turn conversation. Each turn adds or refines knowledge.
 
 ---
 
+### 07_lookups_demo.py
+**Theme**: Multi-Dimensional Exact-Match Queries
+**Strategy**: Lookups API (secondary indices)
+
+Demonstrates how to use Lookups for O(1) fast queries across multiple dimensions
+without vector search overhead. Perfect for scenarios where you need exact-match
+filtering across different data attributes.
+
+**Key Features**:
+- Create custom indices on any data field
+- O(1) lookup performance for precise queries
+- Automatic consistency during merge operations
+- Combine lookups with vector search for powerful queries
+- Support for composite keys and complex indexing strategies
+
+**Output**: Educational pseudo-code with 5 practical scenarios
+
+---
+
 ## Running the Examples
 
 All examples are self-contained and can be run directly:
@@ -107,6 +126,7 @@ python examples/02_rpg_npc_memory.py
 python examples/03_semantic_scholar.py
 python examples/04_multi_source_fusion.py
 python examples/05_conversation_history.py
+python examples/07_lookups_demo.py
 
 # Run individual Chinese examples
 python examples/zh/01_self_improving_debugger.py
@@ -114,9 +134,10 @@ python examples/zh/02_rpg_npc_memory.py
 python examples/zh/03_semantic_scholar.py
 python examples/zh/04_multi_source_fusion.py
 python examples/zh/05_conversation_history.py
+python examples/zh/07_lookups_demo.py
 
 # Run all English examples
-for i in {1..5}; do python examples/0${i}_*.py; done
+for i in {1..5..1} {7}; do python examples/0${i}_*.py; done
 
 # Run all Chinese examples
 for file in examples/zh/*.py; do python "$file"; done

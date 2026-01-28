@@ -35,6 +35,13 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
 <details>
 <summary>Details</summary>
 
+- **[2026-01-28] 🎉 v0.2.0: Lookups Feature Released**:
+  - **Multi-dimensional Indexing**: Create O(1) secondary indices for fast queries by custom keys (name, location, time, etc.)
+  - **Auto-maintained**: Indices automatically update when items merge or are removed
+  - **Memory Efficient**: Stores only references (primary keys), not data copies
+  - **Example**: Build a time-series database where primary key includes timestamp, but query by character name using Lookups!
+  - [Learn more →](docs/en/user-guide/lookups.md) | [中文](docs/zh/user-guide/lookups.md)
+
 - **[2026-01-21] v0.1.5 Released**:
   - **🎯 Production Safety**: Added `max_workers` parameter to control LLM batch processing concurrency
   - **⚡ Rate Limit Protection**: Prevents hitting API rate limits from providers like OpenAI, preventing account throttling
@@ -73,6 +80,34 @@ When you insert new data about an existing entity, OntoMem doesn't create duplic
 ### 🔍 Hybrid Search
 - **Key-Value Lookup**: O(1) exact access (e.g., "Get me Alice's summary for 2024-01-01").
 - **Vector Search**: Semantic similarity search across your entire timeline (e.g., "When was Alice frustrated?").
+
+### 🔎 Multi-Dimensional Lookups
+Create secondary indices for ultra-fast queries across custom dimensions without vector overhead. Perfect for time-series data where you need both temporal and cross-sectional queries.
+
+<details>
+<summary><b>Learn more about Lookups →</b></summary>
+
+**Problem**: If your primary key includes timestamp (for time-series), how do you query by character name?  
+**Solution**: Use **Lookups** for O(1) exact-match queries on any field!
+
+```python
+# Create lookups for different dimensions
+memory.create_lookup("by_character", lambda x: x.char_name)
+memory.create_lookup("by_location", lambda x: x.location)
+
+# Query - automatic sync with merges
+character_events = memory.get_by_lookup("by_character", "Alice")
+location_events = memory.get_by_lookup("by_location", "Kitchen")
+```
+
+**Key Features:**
+- ✨ **Auto-maintained**: Lookups update when items merge or are removed
+- ✨ **Memory efficient**: Stores only references, not data copies
+- ✨ **Consistent**: Merge operations automatically sync lookups
+
+[Full Documentation →](docs/en/user-guide/lookups.md) | [中文文档 →](docs/zh/user-guide/lookups.md)
+
+</details>
 
 ### 💾 Stateful & Persistent
 Save your complete memory state (structured data + vector indices) to disk and restore it in seconds on next startup.

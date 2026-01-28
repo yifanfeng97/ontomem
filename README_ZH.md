@@ -32,6 +32,13 @@
 <details>
 <summary>详情</summary>
 
+- **[2026-01-28] 🎉 v0.2.0：Lookups 功能发布**:
+  - **多维索引**: 为自定义键（名字、位置、时间等）创建 O(1) 二级索引，实现快速精确查询
+  - **自动维护**: 当项目合并或删除时，索引自动更新，保证数据一致性
+  - **内存高效**: 仅存储引用（主键），不复制原始数据
+  - **应用场景**: 构建时间序列数据库，其中主键包含时间戳，但仍可按角色名字快速查询！
+  - [了解更多 →](docs/zh/user-guide/lookups.md) | [English →](docs/en/user-guide/lookups.md)
+
 - **[2026-01-21] v0.1.5 发布**:
   - **🎯 生产环境安全**: 新增 `max_workers` 参数控制 LLM 批量处理并发数
   - **⚡ 防止 API 限流**: 有效防止触发 OpenAI 等 LLM 提供商的速率限制，避免账户被限制
@@ -65,6 +72,34 @@
 ### 🔍 混合搜索（Hybrid Search）
 - **键值查询**：O(1) 精确实体访问
 - **向量搜索**：内置 FAISS 索引用于语义相似性搜索，自动同步
+
+### 🔎 多维查找表（Lookups）
+为自定义维度创建二级索引，实现超快速的精确查询，无需向量开销。适合时间序列数据，可以同时实现时序查询和横截面查询。
+
+<details>
+<summary><b>了解更多关于 Lookups →</b></summary>
+
+**问题**: 如果主键包含时间戳（用于时序数据），如何按角色名字查询？  
+**方案**: 使用 **Lookups** 实现任意字段上 O(1) 精确匹配查询！
+
+```python
+# 为不同维度创建查找表
+memory.create_lookup("by_character", lambda x: x.char_name)
+memory.create_lookup("by_location", lambda x: x.location)
+
+# 查询 - 自动与合并同步
+character_events = memory.get_by_lookup("by_character", "小红")
+location_events = memory.get_by_lookup("by_location", "厨房")
+```
+
+**关键特性：**
+- ✨ **自动维护**: 当项目合并或删除时，查找表自动更新
+- ✨ **内存高效**: 仅存储引用，不复制数据
+- ✨ **数据一致**: 合并操作自动同步查找表
+
+[完整文档 →](docs/zh/user-guide/lookups.md) | [English Docs →](docs/en/user-guide/lookups.md)
+
+</details>
 
 ### 💾 状态保持 & 持久化
 将完整的记忆状态（结构化数据 + 向量索引）保存到磁盘，下次启动时可在秒级恢复。

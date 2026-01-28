@@ -1,6 +1,6 @@
 # OMem Examples - Quick Reference
 
-## 5 Practical Examples Summary
+## 7 Practical Examples Summary
 
 | # | Name | Theme | Strategy | Lines | Complexity |
 |---|------|-------|----------|-------|-----------|
@@ -9,6 +9,7 @@
 | 03 | Semantic Scholar | Research Library | Vector Search | 218 | ⭐⭐⭐ |
 | 04 | Multi-Source Fusion | Data Integration | LLM.BALANCED | 252 | ⭐⭐⭐⭐ |
 | 05 | Conversation History | Chat Memory | MERGE_FIELD | 250 | ⭐⭐⭐ |
+| 06 | Multi-Dimensional Queries | Lookups/Indices | Lookups API | 280 | ⭐⭐⭐ |
 
 ## Feature Matrix
 
@@ -16,6 +17,7 @@
 - **MERGE_FIELD**: Examples 02, 05 (incremental field updates)
 - **LLM.BALANCED**: Examples 01, 04 (intelligent consolidation)
 - **Vector Search**: Example 03 (semantic similarity)
+- **Lookups API**: Example 07 (multi-dimensional exact-match queries)
 
 ### Data Persistence
 - **All examples** save to `temp/{example_name}/`
@@ -34,6 +36,7 @@
 03_semantic_scholar.py         |██████████ 8.0 KB
 04_multi_source_fusion.py      |███████████ 8.5 KB
 05_conversation_history.py     |████████████ 9.7 KB
+07_lookups_demo.py             |███████████ 9.2 KB
 ```
 
 ## Data Structures Overview
@@ -102,6 +105,21 @@ goals_discussed: list[str]         # User's goals
 decisions_made: list[str]          # Agreed decisions
 open_questions: list[str]          # Unanswered questions
 context_notes: str | None          # Additional context
+```
+
+### Example 7: GameEvent (Lookups Demo)
+```python
+id: str                            # Event unique ID
+char_name: str                     # Character name
+location: str                      # Event location
+action: str                        # What happened
+timestamp: str                     # When (HH:MM format)
+
+# Lookups created:
+# - by_character: Query all events involving specific character
+# - by_location: Query all events at specific location
+# - by_hour: Query all events in specific hour
+# - by_location_time: Query composite key (location + hour)
 ```
 
 ## Running Commands

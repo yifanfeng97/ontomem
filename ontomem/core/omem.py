@@ -6,7 +6,7 @@ with intelligent deduplication, merging strategies, and Faiss-based vector searc
 
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, Optional, Type, Union
+from typing import Any, Callable, Dict, Generic, List, Optional, Set, Type, Union
 
 from pydantic import BaseModel
 from langchain_core.documents import Document
@@ -138,7 +138,13 @@ class OMem(BaseMem[T], Generic[T]):
         # 2. Storage: The single source of truth
         self._storage: Dict[Any, T] = {}
 
-        # 3. Vector Index State (LangChain FAISS wrapper)
+        # 3. Lookups (Secondary Indices)
+        # Structure: {lookup_name: {lookup_value: Set[primary_key]}}
+        self._lookups: Dict[str, Dict[Any, Set[Any]]] = {}
+        # Structure: {lookup_name: key_extractor_func}
+        self._lookup_extractors: Dict[str, Callable[[T], Any]] = {}
+
+        # 4. Vector Index State (LangChain FAISS wrapper)
         self._index: Optional[FAISS] = None  # FAISS vector store
 
         logger.debug(
@@ -171,6 +177,154 @@ class OMem(BaseMem[T], Generic[T]):
             True if index exists, False otherwise.
         """
         return self._index is not None
+
+    # --- Lookups (Secondary Indices) ---
+
+    def create_lookup(self, name: str, key_extractor: Callable[[T], Any]) -> None:
+        """Create a secondary lookup table for fast retrieval by custom key.
+
+        Example:
+            >>> memory.create_lookup('by_name', lambda x: x.name)
+            >>> results = memory.get_by_lookup('by_name', 'Alice')
+
+        Args:
+            name: Unique name for this lookup (e.g., 'by_name', 'by_location').
+            key_extractor: Function to extract the lookup key from an entity.
+
+        Raises:
+            ValueError: If lookup with this name already exists.
+        """
+        if name in self._lookups:
+            raise ValueError(f"Lookup '{name}' already exists. Use drop_lookup() to remove it first.")
+
+        self._lookups[name] = {}
+        self._lookup_extractors[name] = key_extractor
+
+        # Re-index existing data
+        logger.debug(f"Creating lookup '{name}' with {len(self._storage)} existing items...")
+        for pk, item in self._storage.items():
+            self._add_to_lookup(name, pk, item)
+
+        logger.info(f"Lookup '{name}' created successfully")
+
+    def get_by_lookup(self, lookup_name: str, lookup_key: Any) -> List[T]:
+        """Retrieve items using a secondary lookup key.
+
+        Args:
+            lookup_name: The name of the lookup table.
+            lookup_key: The value to match (e.g., 'Alice', 'Kitchen').
+
+        Returns:
+            List of matching entities. Returns empty list if lookup not found or no matches.
+        """
+        if lookup_name not in self._lookups:
+            logger.warning(f"Lookup '{lookup_name}' does not exist.")
+            return []
+
+        target_lookup = self._lookups[lookup_name]
+
+        if lookup_key not in target_lookup:
+            return []
+
+        pks = target_lookup[lookup_key]
+        results = []
+        for pk in pks:
+            if pk in self._storage:
+                results.append(self._storage[pk])
+
+        return results
+
+    def drop_lookup(self, name: str) -> bool:
+        """Remove a lookup table.
+
+        Args:
+            name: The name of the lookup to remove.
+
+        Returns:
+            True if removed, False if lookup not found.
+        """
+        if name in self._lookups:
+            del self._lookups[name]
+            del self._lookup_extractors[name]
+            logger.info(f"Lookup '{name}' dropped")
+            return True
+        return False
+
+    def list_lookups(self) -> List[str]:
+        """List all registered lookup names.
+
+        Returns:
+            List of lookup names.
+        """
+        return list(self._lookups.keys())
+
+    # --- Private Lookup Helpers ---
+
+    def _add_to_lookup(self, lookup_name: str, pk: Any, item: T) -> None:
+        """Helper: Add an entry to a specific lookup.
+
+        Args:
+            lookup_name: Name of the lookup.
+            pk: Primary key of the item.
+            item: The item to index.
+        """
+        try:
+            extractor = self._lookup_extractors[lookup_name]
+            val = extractor(item)
+            if val is None:
+                return
+
+            # Ensure val is hashable
+            hash(val)
+
+            if val not in self._lookups[lookup_name]:
+                self._lookups[lookup_name][val] = set()
+            self._lookups[lookup_name][val].add(pk)
+        except TypeError:
+            logger.warning(
+                f"Lookup '{lookup_name}': extracted value is not hashable. Skipping item {pk}."
+            )
+        except Exception as e:
+            logger.warning(f"Failed to update lookup '{lookup_name}' for item {pk}: {e}")
+
+    def _remove_from_lookup(self, lookup_name: str, pk: Any, item: T) -> None:
+        """Helper: Remove an entry from a specific lookup using the item state.
+
+        Args:
+            lookup_name: Name of the lookup.
+            pk: Primary key of the item.
+            item: The item to de-index (used to extract the old lookup key).
+        """
+        try:
+            extractor = self._lookup_extractors[lookup_name]
+            val = extractor(item)
+            if val is None:
+                return
+
+            if val in self._lookups[lookup_name]:
+                if pk in self._lookups[lookup_name][val]:
+                    self._lookups[lookup_name][val].remove(pk)
+                    # Clean up empty keys to save memory
+                    if not self._lookups[lookup_name][val]:
+                        del self._lookups[lookup_name][val]
+        except Exception as e:
+            logger.warning(f"Failed to remove from lookup '{lookup_name}' for item {pk}: {e}")
+
+    def _update_all_lookups(self, pk: Any, new_item: T, old_item: Optional[T] = None) -> None:
+        """Update all lookups for a given primary key.
+
+        Args:
+            pk: Primary key of the item.
+            new_item: The new item state.
+            old_item: The old item state (optional, for removal during updates).
+        """
+        for name in self._lookups:
+            # 1. If we have the old item, remove its trace from this lookup
+            if old_item:
+                self._remove_from_lookup(name, pk, old_item)
+
+            # 2. Add the new trace
+            self._add_to_lookup(name, pk, new_item)
 
     # --- CRUD Operations ---
 
@@ -224,14 +378,31 @@ class OMem(BaseMem[T], Generic[T]):
 
         # Batch merge
         if to_merge:
+            # Snapshot old items before merge for lookup cleanup
+            items_to_update_keys = set()
+            old_items_map: Dict[Any, T] = {}
+
+            for item in to_merge:
+                pk = self.key_extractor(item)
+                if pk in self._storage:
+                    items_to_update_keys.add(pk)
+                    old_items_map[pk] = self._storage[pk]
+
             merged_items = self._merger.merge(to_merge)
             merged_dict = {self.key_extractor(item): item for item in merged_items}
             self._storage.update(merged_dict)
 
+            # Update lookups for merged items
+            for pk, new_item in merged_dict.items():
+                old_item = old_items_map.get(pk)
+                self._update_all_lookups(pk, new_item, old_item)
+
         # Direct insert
         for item in to_insert:
-            key = self.key_extractor(item)
-            self._storage[key] = item
+            pk = self.key_extractor(item)
+            self._storage[pk] = item
+            # Update lookups (no old item, only add)
+            self._update_all_lookups(pk, item, old_item=None)
 
         # Mark index as stale
         if self._index is not None:
@@ -251,6 +422,11 @@ class OMem(BaseMem[T], Generic[T]):
             True if removed, False if key not found.
         """
         if key in self._storage:
+            item = self._storage[key]
+            # Remove from lookups first using the item state
+            for name in self._lookups:
+                self._remove_from_lookup(name, key, item)
+
             del self._storage[key]
             if self._index is not None:
                 self.clear_index()

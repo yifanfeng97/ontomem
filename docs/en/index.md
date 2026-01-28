@@ -26,6 +26,13 @@ Traditional RAG (Retrieval-Augmented Generation) systems retrieve text fragments
 
 ## 📰 News & Updates
 
+- **[2026-01-28] v0.2.0 Released**:
+  - **✨ Lookups Feature**: O(1) multi-dimensional exact-match queries with automatic index consistency during merges
+  - **🔍 Secondary Indices**: Create custom indices on any data field for blazing-fast lookups without vector search overhead
+  - **🔄 Automatic Sync**: Indices automatically update when items merge, maintaining perfect consistency
+  - **🎯 Composite Keys**: Support for complex indexing strategies (composite keys, hierarchical keys, etc.)
+  - [Learn more →](user-guide/lookups.md)
+
 - **[2026-01-21] v0.1.5 Released**:
   - **🎯 Production Safety**: Added `max_workers` parameter to control LLM batch processing concurrency
   - **⚡ Rate Limit Protection**: Prevents hitting API rate limits from providers like OpenAI, preventing account throttling
