@@ -116,6 +116,13 @@ class OMem(BaseMem[T], Generic[T]):
         self.embedder = embedder
         self.fields_for_index = fields_for_index or []
 
+        if self.fields_for_index:
+            for field in self.fields_for_index:
+                if field not in self.memory_schema.model_fields:
+                    raise ValueError(
+                        f"Field '{field}' not in memory_schema '{self.memory_schema.__name__}'"
+                    )
+
         # 1. Merge Strategy Setup
         if isinstance(strategy_or_merger, BaseMerger):
             # Pre-configured merger instance: use directly
