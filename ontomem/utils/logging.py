@@ -30,7 +30,7 @@ def get_logger(name: str) -> logging.Logger:
 
 
 def configure_logging(
-    level: str = "INFO",
+    level: str = "WARNING",
     format_string: Optional[str] = None,
 ) -> None:
     """Configure root logger for ontomem.

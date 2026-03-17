@@ -102,13 +102,15 @@ class OMem(BaseMem[T], Generic[T]):
                                 2. A pre-configured BaseMerger instance (for full control)
             fields_for_index: (Optional) List of field names to embed for search.
                                If None, entire JSON is embedded.
-            verbose: Enable DEBUG logging.
+            verbose: Enable DEBUG logging. Default False uses WARNING level (quiet mode).
             **kwargs: Additional arguments passed to create_merger() when strategy_or_merger is
                       a MergeStrategy enum. For example, rule="..." and dynamic_rule=... for
                       MergeStrategy.LLM.CUSTOM_RULE. Ignored if strategy_or_merger is a BaseMerger instance.
         """
         if verbose:
             configure_logging(level="DEBUG")
+        else:
+            configure_logging(level="WARNING")
 
         self.memory_schema = memory_schema
         self.key_extractor = key_extractor
