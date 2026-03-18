@@ -72,6 +72,7 @@ plugins:
               - 概述: zh/user-guide/overview.md
               - 合并策略: zh/user-guide/merge-strategies.md
               - 搜索功能: zh/user-guide/search-capabilities.md
+              - 查找表: zh/user-guide/lookups.md
               - 持久化: zh/user-guide/persistence.md
               - 高级用法: zh/user-guide/advanced-usage.md
             - API 参考:
@@ -93,6 +94,7 @@ nav:
     - Overview: en/user-guide/overview.md
     - Merge Strategies: en/user-guide/merge-strategies.md
     - Search: en/user-guide/search-capabilities.md
+    - Lookups: en/user-guide/lookups.md
     - Persistence: en/user-guide/persistence.md
     - Advanced: en/user-guide/advanced-usage.md
   - API Reference:

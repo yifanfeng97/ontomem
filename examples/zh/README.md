@@ -83,6 +83,23 @@
 - 2个不同的用户对话会话
 - 每个会话3-4轮对话
 
+### 📋 07_lookups_demo.py
+**多维精确查询 - Lookups 二级索引**
+
+演示如何使用 Lookups 进行 O(1) 快速查询，跨越多个维度，无需向量搜索开销。
+适用于需要在不同数据属性上进行精确匹配过滤的场景。
+
+**关键特性：**
+- 在任何数据字段上创建自定义索引
+- O(1) 查询性能以获得精确查询
+- 合并操作期间的自动一致性维护
+- 将 Lookups 与向量搜索结合实现强大的查询
+- 支持复合键和复杂索引策略
+
+**数据项：**
+- GameEvent 模型（id、char_name、location、action、timestamp）
+- 5 个实际应用场景的伪代码示例
+
 ## 运行示例
 
 ### 单个示例
@@ -91,6 +108,8 @@ python zh/01_self_improving_debugger.py
 python zh/02_rpg_npc_memory.py
 python zh/03_semantic_scholar.py
 python zh/04_multi_source_fusion.py
+python zh/05_conversation_history.py
+python zh/07_lookups_demo.py
 python zh/05_conversation_history.py
 ```
 
