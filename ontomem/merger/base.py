@@ -165,12 +165,12 @@ class BaseMerger(ABC, Generic[T]):
         # Step 1: Group items by unique key
         groups = self._group_by_key(items)
 
-        self.logger.info(f"Grouped {len(items)} items into {len(groups)} unique keys")
+        self.logger.info("items_grouped", items_in=len(items), keys=len(groups))
 
         # Step 2: Cross-key tournament merge
         merged_items = self._cross_key_tournament_merge(groups)
 
-        self.logger.info(f"Merged into {len(merged_items)} unique items")
+        self.logger.info("merge_completed", items_out=len(merged_items))
 
         return merged_items
 
@@ -197,9 +197,9 @@ class BaseMerger(ABC, Generic[T]):
                 if key is not None:
                     groups[key].append(item)
                 else:
-                    self.logger.warning(f"Item has None key, skipping: {item}")
+                    self.logger.warning("item_has_none_key", item=str(item))
             except Exception as e:
-                self.logger.warning(f"Failed to extract key from item: {e}")
+                self.logger.warning("key_extraction_failed", error=str(e))
         return dict(groups)
 
     def _cross_key_tournament_merge(self, groups: Dict[Any, List[T]]) -> List[T]:
@@ -261,8 +261,9 @@ class BaseMerger(ABC, Generic[T]):
         )
 
         self.logger.debug(
-            f"Starting cross-key tournament merge for {len(groups)} keys "
-            f"(max {max_rounds} rounds)"
+            "tournament_merge_start",
+            keys=len(groups),
+            max_rounds=max_rounds,
         )
 
         # Continue until all keys have exactly 1 item
@@ -284,8 +285,11 @@ class BaseMerger(ABC, Generic[T]):
             # Batch merge ALL pairs from ALL keys in ONE call
             if all_pairs:
                 self.logger.debug(
-                    f"Round {round_num}/{max_rounds}: Batch merging {len(all_pairs)} pairs "
-                    f"from {len([k for k, items in key_rounds.items() if len(items) > 1])} keys"
+                    "tournament_round",
+                    round=round_num,
+                    total=max_rounds,
+                    pairs=len(all_pairs),
+                    keys=len([k for k, items in key_rounds.items() if len(items) > 1]),
                 )
 
                 merged_results = self.batch_merge(all_pairs)
@@ -313,6 +317,6 @@ class BaseMerger(ABC, Generic[T]):
         # Extract final merged item for each key
         merged_items = [items[0] for items in key_rounds.values()]
 
-        self.logger.debug(f"Cross-key tournament merge completed in {round_num} rounds")
+        self.logger.debug("tournament_merge_complete", rounds=round_num)
 
         return merged_items

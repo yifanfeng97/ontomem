@@ -130,8 +130,8 @@ class OMem(BaseMem[T], Generic[T]):
             # Pre-configured merger instance: use directly
             if kwargs:
                 logger.warning(
-                    "Initialized with a Merger instance. Additional kwargs are ignored: %s",
-                    list(kwargs.keys()),
+                    "merger_instance_kwargs_ignored",
+                    kwargs=list(kwargs.keys()),
                 )
             self._merger = strategy_or_merger
         else:
@@ -157,9 +157,9 @@ class OMem(BaseMem[T], Generic[T]):
         self._index: Optional[FAISS] = None  # FAISS vector store
 
         logger.debug(
-            f"OMem initialized: schema={memory_schema.__name__}, "
-            f"strategy={self._merger.__class__.__name__}, "
-            f"indexing=enabled"
+            "omem_initialized",
+            schema=memory_schema.__name__,
+            strategy=self._merger.__class__.__name__,
         )
 
     # --- Properties ---
@@ -210,11 +210,11 @@ class OMem(BaseMem[T], Generic[T]):
         self._lookup_extractors[name] = key_extractor
 
         # Re-index existing data
-        logger.debug(f"Creating lookup '{name}' with {len(self._storage)} existing items...")
+        logger.debug("creating_lookup", name=name, items=len(self._storage))
         for pk, item in self._storage.items():
             self._add_to_lookup(name, pk, item)
 
-        logger.info(f"Lookup '{name}' created successfully")
+        logger.info("lookup_created", name=name)
 
     def get_by_lookup(self, lookup_name: str, lookup_key: Any) -> List[T]:
         """Retrieve items using a secondary lookup key.
@@ -227,7 +227,7 @@ class OMem(BaseMem[T], Generic[T]):
             List of matching entities. Returns empty list if lookup not found or no matches.
         """
         if lookup_name not in self._lookups:
-            logger.warning(f"Lookup '{lookup_name}' does not exist.")
+            logger.warning("lookup_not_found", name=lookup_name)
             return []
 
         target_lookup = self._lookups[lookup_name]
@@ -255,7 +255,7 @@ class OMem(BaseMem[T], Generic[T]):
         if name in self._lookups:
             del self._lookups[name]
             del self._lookup_extractors[name]
-            logger.info(f"Lookup '{name}' dropped")
+            logger.info("lookup_dropped", name=name)
             return True
         return False
 
@@ -291,10 +291,12 @@ class OMem(BaseMem[T], Generic[T]):
             self._lookups[lookup_name][val].add(pk)
         except TypeError:
             logger.warning(
-                f"Lookup '{lookup_name}': extracted value is not hashable. Skipping item {pk}."
+                "lookup_value_not_hashable",
+                lookup_name=lookup_name,
+                pk=pk,
             )
         except Exception as e:
-            logger.warning(f"Failed to update lookup '{lookup_name}' for item {pk}: {e}")
+            logger.warning("lookup_update_failed", lookup_name=lookup_name, pk=pk, error=str(e))
 
     def _remove_from_lookup(self, lookup_name: str, pk: Any, item: T) -> None:
         """Helper: Remove an entry from a specific lookup using the item state.
@@ -317,7 +319,7 @@ class OMem(BaseMem[T], Generic[T]):
                     if not self._lookups[lookup_name][val]:
                         del self._lookups[lookup_name][val]
         except Exception as e:
-            logger.warning(f"Failed to remove from lookup '{lookup_name}' for item {pk}: {e}")
+            logger.warning("lookup_remove_failed", lookup_name=lookup_name, pk=pk, error=str(e))
 
     def _update_all_lookups(self, pk: Any, new_item: T, old_item: Optional[T] = None) -> None:
         """Update all lookups for a given primary key.
@@ -417,9 +419,7 @@ class OMem(BaseMem[T], Generic[T]):
         if self._index is not None:
             self.clear_index()
 
-        logger.debug(
-            f"Added {len(key_to_items)} unique keys to memory (size now: {self.size})"
-        )
+        logger.debug("items_added", count=len(key_to_items), size=self.size)
 
     def remove(self, key: Any) -> bool:
         """Remove an item by key.
@@ -439,7 +439,7 @@ class OMem(BaseMem[T], Generic[T]):
             del self._storage[key]
             if self._index is not None:
                 self.clear_index()
-            logger.debug(f"Removed key {key} from memory (size now: {self.size})")
+            logger.debug("item_removed", key=key, size=self.size)
             return True
         return False
 
@@ -458,12 +458,12 @@ class OMem(BaseMem[T], Generic[T]):
         """Wipe all memory (reset to empty state)."""
         self._storage.clear()
         self.clear_index()
-        logger.info("Memory cleared")
+        logger.info("memory_cleared")
 
     def clear_index(self) -> None:
         """Clear the vector index without affecting stored items."""
         self._index = None
-        logger.info("Vector index cleared")
+        logger.info("index_cleared")
 
     # --- Search & Indexing ---
 
@@ -486,14 +486,14 @@ class OMem(BaseMem[T], Generic[T]):
             )
 
         if not force and self._index is not None:
-            logger.debug("Index already built, skipping rebuild")
+            logger.debug("index_already_built")
             return
 
         items = self.items
-        logger.info(f"Building index for {len(items)} items...")
+        logger.info("building_index", items=len(items))
 
         if not items:
-            logger.debug("No items to index")
+            logger.debug("no_items_to_index")
             return
 
         # 1. Serialize items as documents
@@ -511,11 +511,9 @@ class OMem(BaseMem[T], Generic[T]):
         # 2. Build FAISS index
         try:
             self._index = FAISS.from_documents(documents, self.embedder)
-            logger.info(f"Index built successfully with {len(documents)} items")
+            logger.info("index_built", documents=len(documents))
         except ImportError:
-            logger.error(
-                "FAISS not available. Install with: pip install langchain-community"
-            )
+            logger.error("faiss_import_error")
             raise
 
     def search(self, query: str, top_k: int = 5) -> List[T]:
@@ -541,11 +539,11 @@ class OMem(BaseMem[T], Generic[T]):
 
         # Auto-rebuild if needed
         if self._index is None:
-            logger.debug("Index is not built, rebuilding before search...")
+            logger.debug("rebuilding_index_before_search")
             self.build_index()
 
         if self._index is None:
-            logger.debug("Index is empty, returning no results")
+            logger.debug("index_empty_no_results")
             return []
 
         # Search using FAISS
@@ -559,13 +557,13 @@ class OMem(BaseMem[T], Generic[T]):
                     if key is not None and key in self._storage:
                         results.append(self._storage[key])
                 except Exception as e:
-                    logger.warning(f"Failed to restore item from search result: {e}")
+                    logger.warning("search_result_restore_failed", error=str(e))
                     continue
 
-            logger.debug(f"Search returned {len(results)} results for query: '{query}'")
+            logger.debug("search_completed", results=len(results), query=query)
             return results
         except Exception as e:
-            logger.error(f"Search failed: {e}")
+            logger.error("search_failed", error=str(e))
             return []
 
     # --- Persistence (Fine-grained v0.1.5+) ---
@@ -583,9 +581,9 @@ class OMem(BaseMem[T], Generic[T]):
             data = [item.model_dump(mode="json") for item in self.items]
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False, default=str)
-            logger.info(f"Memory data persisted to {file_path}")
+            logger.info("data_persisted", path=str(file_path))
         except Exception as e:
-            logger.error(f"Failed to persist memory data: {e}")
+            logger.error("data_persist_failed", error=str(e))
             raise
 
     def dump_index(self, folder_path: Union[str, Path]) -> None:
@@ -599,15 +597,15 @@ class OMem(BaseMem[T], Generic[T]):
         folder_path = Path(folder_path)
 
         if self._index is None:
-            logger.debug("No index to save (index not built)")
+            logger.debug("no_index_to_save")
             return
 
         try:
             folder_path.mkdir(parents=True, exist_ok=True)
             self._index.save_local(str(folder_path))
-            logger.info(f"Vector index persisted to {folder_path}")
+            logger.info("index_persisted", path=str(folder_path))
         except Exception as e:
-            logger.warning(f"Failed to save vector index: {e}")
+            logger.warning("index_save_failed", error=str(e))
             raise
 
     def load_data(self, file_path: Union[str, Path]) -> None:
@@ -627,10 +625,10 @@ class OMem(BaseMem[T], Generic[T]):
 
             items = [self.memory_schema(**d) for d in data]
             self.add(items)
-            logger.info(f"Memory loaded from {file_path} ({len(items)} items)")
+            logger.info("data_loaded", path=str(file_path), items=len(items))
 
         except Exception as e:
-            logger.error(f"Failed to load memory data: {e}")
+            logger.error("data_load_failed", error=str(e))
             raise
 
     def load_index(self, folder_path: Union[str, Path]) -> None:
@@ -642,16 +640,16 @@ class OMem(BaseMem[T], Generic[T]):
         folder_path = Path(folder_path)
 
         if not folder_path.exists():
-            logger.debug(f"No index folder found at {folder_path}, skipping")
+            logger.debug("no_index_folder", path=str(folder_path))
             return
 
         try:
             self._index = FAISS.load_local(
                 str(folder_path), self.embedder, allow_dangerous_deserialization=True
             )
-            logger.info(f"Vector index loaded from {folder_path}")
+            logger.info("index_loaded", path=str(folder_path))
         except Exception as e:
-            logger.warning(f"Failed to load vector index: {e}")
+            logger.warning("index_load_failed", error=str(e))
             self._index = None
             raise
 
@@ -672,9 +670,9 @@ class OMem(BaseMem[T], Generic[T]):
             }
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
-            logger.info(f"Metadata persisted to {file_path}")
+            logger.info("metadata_persisted", path=str(file_path))
         except Exception as e:
-            logger.warning(f"Failed to persist metadata: {e}")
+            logger.warning("metadata_persist_failed", error=str(e))
 
     def load_metadata(self, file_path: Union[str, Path]) -> None:
         """Load metadata from a JSON file.
@@ -685,18 +683,20 @@ class OMem(BaseMem[T], Generic[T]):
         file_path = Path(file_path)
 
         if not file_path.exists():
-            logger.debug(f"Metadata file not found: {file_path}, skipping")
+            logger.debug("metadata_file_not_found", path=str(file_path))
             return
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 metadata = json.load(f)
-            logger.info(f"Metadata loaded from {file_path}")
+            logger.info("metadata_loaded", path=str(file_path))
             logger.debug(
-                f"Schema: {metadata.get('schema_name')}, Size: {metadata.get('size')}"
+                "metadata_details",
+                schema=metadata.get('schema_name'),
+                size=metadata.get('size'),
             )
         except Exception as e:
-            logger.warning(f"Failed to load metadata: {e}")
+            logger.warning("metadata_load_failed", error=str(e))
 
     # --- Private Helpers ---
 

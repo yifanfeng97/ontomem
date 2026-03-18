@@ -17,7 +17,7 @@ from .merger import (
     PreferExistingMerger,
     PreferIncomingMerger
 )
-from .utils.logging import configure_logging, get_logger
+from .utils.logging import configure_logging, get_logger, set_log_level
 
 __version__ = "0.2.2"
 __author__ = "Yifan Feng"
@@ -42,4 +42,5 @@ __all__ = [
     # Utilities
     "configure_logging",
     "get_logger",
+    "set_log_level",
 ]

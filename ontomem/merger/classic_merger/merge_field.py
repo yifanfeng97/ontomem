@@ -69,14 +69,12 @@ class FieldMerger(BaseMerger[T]):
             return type(incoming)(**merged_data)
         except AttributeError as e:
             logger.error(
-                f"FieldMerger requires Pydantic BaseModel instances. "
-                f"Got types: {type(existing)}, {type(incoming)}. Error: {e}"
+                "field_merger_type_error",
+                existing_type=type(existing).__name__,
+                incoming_type=type(incoming).__name__,
+                error=str(e),
             )
-            # Fallback to keep incoming
             return incoming
         except Exception as e:
-            logger.error(
-                f"FieldMerger failed during merge: {e}. "
-                f"Falling back to keep incoming."
-            )
+            logger.error("field_merger_failed", error=str(e))
             return incoming

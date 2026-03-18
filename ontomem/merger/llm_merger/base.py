@@ -82,7 +82,7 @@ class BaseLLMMerger(BaseMerger[T]):
             Merged item from LLM, or incoming item if LLM fails.
         """
         try:
-            self.logger.debug("Performing single LLM merge (fallback)")
+            self.logger.debug("llm_single_merge_fallback")
             
             prompt = self.build_prompt()
             merge_chain = prompt | self.llm_client.with_structured_output(self.item_schema)
@@ -94,7 +94,8 @@ class BaseLLMMerger(BaseMerger[T]):
             return merged
         except Exception as e:
             self.logger.error(
-                f"LLM pair merge failed: {e}. Falling back to keep_incoming strategy."
+                "llm_pair_merge_failed",
+                error=str(e),
             )
             return incoming
 
@@ -117,8 +118,8 @@ class BaseLLMMerger(BaseMerger[T]):
         merge_chain = prompt | self.llm_client.with_structured_output(self.item_schema)
 
         self.logger.info(
-            f"Batch merging {len(pairs)} pairs with LLM "
-            f"(single API call instead of {len(pairs)} calls)"
+            "llm_batch_merge_start",
+            pairs=len(pairs),
         )
 
         # Prepare batch inputs
@@ -136,13 +137,14 @@ class BaseLLMMerger(BaseMerger[T]):
             config = {"max_concurrency": self.max_workers} if self.max_workers else None
             merged_results = merge_chain.batch(inputs, config=config)
             
-            self.logger.info(f"Successfully batch merged {len(merged_results)} pairs")
+            self.logger.info("llm_batch_merge_success", pairs=len(merged_results))
             return merged_results
 
         except Exception as e:
             self.logger.error(
-                f"Batch LLM merge failed: {e}. "
-                f"Falling back to sequential pair_merge for {len(pairs)} pairs."
+                "llm_batch_merge_failed",
+                error=str(e),
+                pairs=len(pairs),
             )
 
             # Fallback: Sequential pair merges
