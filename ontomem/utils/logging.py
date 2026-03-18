@@ -52,6 +52,7 @@ def configure_logging(
     handlers = []
     
     console_handler = logging.StreamHandler(sys.stderr)
+    console_handler.setLevel(level_value)
     console_handler.setFormatter(structlog.stdlib.ProcessorFormatter(
         foreign_pre_chain=[
             structlog.contextvars.merge_contextvars,
@@ -69,6 +70,7 @@ def configure_logging(
     
     if output_file:
         file_handler = logging.FileHandler(output_file, encoding="utf-8")
+        file_handler.setLevel(level_value)
         file_handler.setFormatter(logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         ))
