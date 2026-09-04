@@ -6,7 +6,7 @@ with intelligent deduplication, merging strategies, and Faiss-based vector searc
 
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, Type, Union
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from pydantic import BaseModel
 from langchain_core.documents import Document
@@ -459,6 +459,152 @@ class OMem(BaseMem[T], Generic[T]):
         self._storage.clear()
         self.clear_index()
         logger.info("memory_cleared")
+
+    def remove_many(self, keys: List[Any]) -> Tuple[List[Any], List[Any]]:
+        """Remove multiple items by key in one batch.
+
+        Unlike repeated :meth:`remove` calls, this does **not** clear the
+        vector index per key — pair it with :meth:`sync_index` to update the
+        index incrementally instead of dropping it.
+
+        Args:
+            keys: Keys of the items to remove.
+
+        Returns:
+            Tuple ``(removed_keys, not_found_keys)``.
+        """
+        removed: List[Any] = []
+        not_found: List[Any] = []
+        for key in keys:
+            item = self._storage.pop(key, None)
+            if item is None:
+                not_found.append(key)
+                continue
+            for name in self._lookups:
+                self._remove_from_lookup(name, key, item)
+            removed.append(key)
+        if removed:
+            logger.debug("items_removed", count=len(removed), size=self.size)
+        return removed, not_found
+
+    def upsert(self, items: Union[T, List[T]]) -> None:
+        """Insert or replace items by key, bypassing merge.
+
+        Unlike :meth:`add`, an existing item with the same key is **replaced
+        outright** instead of being merged with the incoming one. This does
+        **not** clear the vector index — pair with :meth:`sync_index` to
+        re-embed only the affected items.
+
+        Args:
+            items: Single entity or list of entities.
+
+        Raises:
+            TypeError: If an item is not of memory_schema type.
+        """
+        if isinstance(items, BaseModel):
+            items = [items]
+
+        for item in items:
+            if not isinstance(item, self.memory_schema):
+                raise TypeError(
+                    f"Item must be {self.memory_schema.__name__}, got {type(item).__name__}"
+                )
+
+        for item in items:
+            key = self.key_extractor(item)
+            old_item = self._storage.get(key)
+            if old_item is not None:
+                for name in self._lookups:
+                    self._remove_from_lookup(name, key, old_item)
+            self._storage[key] = item
+            self._update_all_lookups(key, item, old_item=old_item)
+
+        logger.debug("items_upserted", count=len(items), size=self.size)
+
+    def sync_index(
+        self,
+        *,
+        removed_keys: Optional[Iterable[Any]] = None,
+        upserted_keys: Optional[Iterable[Any]] = None,
+    ) -> bool:
+        """Incrementally update the vector index for the affected keys only.
+
+        Deletes the vectors of ``removed_keys``/``upserted_keys`` and embeds
+        only the upserted items — instead of the drop-and-full-rebuild
+        behavior that :meth:`add` / :meth:`remove` trigger. Pair with
+        :meth:`remove_many` / :meth:`upsert`:
+
+            removed, _ = memory.remove_many(["a", "b"])
+            memory.upsert(new_item)
+            memory.sync_index(removed_keys=removed, upserted_keys=[new_item_key])
+
+        The ``key → vector_id`` map is derived from the docstore, which
+        already stores the key per vector, so no storage-format change is
+        needed.
+
+        Args:
+            removed_keys: Keys whose vectors must be deleted.
+            upserted_keys: Keys present in memory whose vectors must be
+                re-embedded.
+
+        Returns:
+            True if the index was patched in place. False when no index is
+            built or patching failed — call :meth:`build_index` to fall back
+            to a full rebuild.
+        """
+        vs = self._index
+        if vs is None:
+            return False
+
+        removed_keys = list(removed_keys or [])
+        upserted_keys = list(upserted_keys or [])
+
+        # Detach first: a failure must leave us in the documented fallback
+        # state (no index -> lazy full rebuild), not a half-patched one.
+        self._index = None
+        try:
+            id_by_key: Dict[Any, str] = {}
+            for doc_id, doc in vs.docstore._dict.items():
+                doc_key = doc.metadata.get("key")
+                if doc_key is not None:
+                    id_by_key[doc_key] = doc_id
+
+            stale_ids = [
+                id_by_key[k]
+                for k in set(removed_keys) | set(upserted_keys)
+                if k in id_by_key
+            ]
+            if stale_ids:
+                vs.delete(stale_ids)
+
+            documents: List[Document] = []
+            for key in set(upserted_keys):
+                item = self._storage.get(key)
+                if item is None:
+                    continue
+                documents.append(
+                    Document(
+                        page_content=self._serialize_for_embedding(item),
+                        metadata={"key": key, "raw": item.model_dump()},
+                    )
+                )
+            if documents:
+                vs.add_documents(documents)
+        except Exception as exc:
+            logger.warning(
+                "index_sync_failed",
+                error=str(exc),
+                hint="build_index() will perform a full rebuild",
+            )
+            return False
+
+        self._index = vs
+        logger.info(
+            "index_synced",
+            removed=len(removed_keys),
+            upserted=len(upserted_keys),
+        )
+        return True
 
     def clear_index(self) -> None:
         """Clear the vector index without affecting stored items."""
