@@ -217,6 +217,50 @@ class TestSourcesPersistence:
         assert "s2" in m2._sources
 
 
+class TestProvenanceIndexPatching:
+    """The built index must survive remove_source/upsert_source (patched,
+    never dropped) — regression tests for the suspended_index reattach."""
+
+    def test_remove_source_patches_built_index(self):
+        m = _memory()
+        m.add(
+            Doc(doc_id="a", title="A", content="fact from s1"), source_id="s1"
+        )
+        m.add(Doc(doc_id="b", title="B"), source_id="s2")
+        m.build_index()
+
+        report = m.remove_source("s1")
+
+        assert report["index_patched"] is True
+        assert m.has_index()  # survives — not dropped for a full rebuild
+        keys = {d.metadata["key"] for d in m._index.docstore._dict.values()}
+        assert keys == {"b"}
+
+    def test_upsert_source_patches_built_index(self):
+        m = _memory()
+        m.add(
+            Doc(doc_id="a", title="A", content="a fact v1 from s1"),
+            source_id="s1",
+        )
+        m.build_index()
+
+        report = m.upsert_source(
+            "s1",
+            [Doc(doc_id="a", title="A", content="a fact v2 from s1")],
+        )
+
+        assert report["index_patched"] is True
+        assert m.has_index()
+        docs = [
+            d
+            for d in m._index.docstore._dict.values()
+            if d.metadata["key"] == "a"
+        ]
+        assert len(docs) == 1
+        assert "a fact v1" not in docs[0].page_content
+        assert "a fact v2" in docs[0].page_content
+
+
 class TestSuspendedIndex:
     def test_exception_reattaches_index(self):
         m = _memory()

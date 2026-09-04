@@ -35,6 +35,12 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
 <details>
 <summary>Details</summary>
 
+- **[2026-09-05] 🎉 v0.4.0: Attributed Memory (Source Ledger)**:
+  - **Per-document rollback**: `add(items, source_id=...)` records raw pre-merge results; `remove_source()` rolls back exactly (re-merging surviving sources), `upsert_source()` replaces a document in one step
+  - **Opt-in ledger**: `track_sources=True`; ~1.5-2x storage overhead, bounded (only the current version per source is kept)
+  - **`suspended_index()`**: batch mutations without dropping the vector index
+  - **Embedder fingerprint**: indexes record the embedder signature and refuse vectors from a different embedding space
+
 - **[2026-09-04] 🎉 v0.3.0: Incremental Index Maintenance & Semantic Editing**:
   - **`sync_index()`**: Patch the FAISS index in place — delete/re-embed only the affected vectors instead of dropping the whole index (up to 200× fewer embedding calls on small edits)
   - **`remove_many()` / `upsert()`**: Batch removal and replace-by-key semantics that preserve the index

@@ -777,10 +777,10 @@ class OMem(BaseMem[T], Generic[T]):
         """Temporarily detach the vector index while mutating storage.
 
         Inside this block, ``add()`` / ``remove()`` / ``remove_many()`` /
-        ``upsert()`` do **not** clear or touch the index. The caller is
-        responsible for tracking affected keys and calling
-        :meth:`sync_index` afterwards — on success the (patched) index is
-        reattached; on failure the index stays detached and is lazily
+        ``upsert()`` do **not** clear or touch the index. The detached index
+        is reattached on block exit (untouched on error) — the caller then
+        calls :meth:`sync_index` with the affected keys to patch it in
+        place. If that sync fails, the index is dropped again and lazily
         rebuilt from storage.
 
         Yields:
@@ -794,6 +794,9 @@ class OMem(BaseMem[T], Generic[T]):
             # Mutations failed midway — reattach the untouched index.
             self._index = vs
             raise
+        else:
+            # Reattach so the post-block sync_index() patches it in place.
+            self._index = vs
 
     def _require_track_sources(self) -> None:
         if not self.track_sources:
