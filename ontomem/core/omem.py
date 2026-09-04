@@ -5,23 +5,25 @@ with intelligent deduplication, merging strategies, and Faiss-based vector searc
 """
 
 import json
+from collections.abc import Callable, Iterable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
-
-from pydantic import BaseModel
-from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate
-
-from .sources import SourceRecord
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.embeddings import Embeddings
-
-from .base import BaseMem, T
-from ..merger import BaseMerger, create_merger, MergeStrategy
-from ..utils.logging import configure_logging, get_logger
+from typing import (
+    Any,
+    Generic,
+)
 
 from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel
+
+from ..merger import BaseMerger, MergeStrategy, create_merger
+from ..utils.logging import configure_logging, get_logger
+from .base import BaseMem, T
+from .sources import SourceRecord
 
 logger = get_logger(__name__)
 
@@ -98,15 +100,13 @@ class OMem(BaseMem[T], Generic[T]):
 
     def __init__(
         self,
-        memory_schema: Type[T],
+        memory_schema: type[T],
         key_extractor: Callable[[T], Any],
         llm_client: BaseChatModel,
         embedder: Embeddings,
         *,
-        strategy_or_merger: Union[
-            MergeStrategy, BaseMerger
-        ] = MergeStrategy.LLM.BALANCED,
-        fields_for_index: Optional[List[str]] = None,
+        strategy_or_merger: MergeStrategy | BaseMerger = MergeStrategy.LLM.BALANCED,
+        fields_for_index: list[str] | None = None,
         verbose: bool = False,
         track_sources: bool = False,
         **kwargs: Any,
@@ -146,7 +146,7 @@ class OMem(BaseMem[T], Generic[T]):
 
         # Source ledger (provenance tracking, v0.4.0+). Opt-in.
         self.track_sources = track_sources
-        self._sources: Dict[str, SourceRecord] = {}
+        self._sources: dict[str, SourceRecord] = {}
 
         if self.fields_for_index:
             for field in self.fields_for_index:
@@ -175,16 +175,16 @@ class OMem(BaseMem[T], Generic[T]):
             )
 
         # 2. Storage: The single source of truth
-        self._storage: Dict[Any, T] = {}
+        self._storage: dict[Any, T] = {}
 
         # 3. Lookups (Secondary Indices)
         # Structure: {lookup_name: {lookup_value: Set[primary_key]}}
-        self._lookups: Dict[str, Dict[Any, Set[Any]]] = {}
+        self._lookups: dict[str, dict[Any, set[Any]]] = {}
         # Structure: {lookup_name: key_extractor_func}
-        self._lookup_extractors: Dict[str, Callable[[T], Any]] = {}
+        self._lookup_extractors: dict[str, Callable[[T], Any]] = {}
 
         # 4. Vector Index State (LangChain FAISS wrapper)
-        self._index: Optional[FAISS] = None  # FAISS vector store
+        self._index: FAISS | None = None  # FAISS vector store
 
         logger.debug(
             "omem_initialized",
@@ -195,12 +195,12 @@ class OMem(BaseMem[T], Generic[T]):
     # --- Properties ---
 
     @property
-    def keys(self) -> List[Any]:
+    def keys(self) -> list[Any]:
         """Return all unique keys in memory."""
         return list(self._storage.keys())
 
     @property
-    def items(self) -> List[T]:
+    def items(self) -> list[T]:
         """Return all entity instances in memory."""
         return list(self._storage.values())
 
@@ -239,7 +239,9 @@ class OMem(BaseMem[T], Generic[T]):
             ValueError: If lookup with this name already exists.
         """
         if name in self._lookups:
-            raise ValueError(f"Lookup '{name}' already exists. Use drop_lookup() to remove it first.")
+            raise ValueError(
+                f"Lookup '{name}' already exists. Use drop_lookup() to remove it first."
+            )
 
         self._lookups[name] = {}
         self._lookup_extractors[name] = key_extractor
@@ -251,7 +253,7 @@ class OMem(BaseMem[T], Generic[T]):
 
         logger.info("lookup_created", name=name)
 
-    def get_by_lookup(self, lookup_name: str, lookup_key: Any) -> List[T]:
+    def get_by_lookup(self, lookup_name: str, lookup_key: Any) -> list[T]:
         """Retrieve items using a secondary lookup key.
 
         Args:
@@ -294,7 +296,7 @@ class OMem(BaseMem[T], Generic[T]):
             return True
         return False
 
-    def list_lookups(self) -> List[str]:
+    def list_lookups(self) -> list[str]:
         """List all registered lookup names.
 
         Returns:
@@ -331,7 +333,9 @@ class OMem(BaseMem[T], Generic[T]):
                 pk=pk,
             )
         except Exception as e:
-            logger.warning("lookup_update_failed", lookup_name=lookup_name, pk=pk, error=str(e))
+            logger.warning(
+                "lookup_update_failed", lookup_name=lookup_name, pk=pk, error=str(e)
+            )
 
     def _remove_from_lookup(self, lookup_name: str, pk: Any, item: T) -> None:
         """Helper: Remove an entry from a specific lookup using the item state.
@@ -354,9 +358,13 @@ class OMem(BaseMem[T], Generic[T]):
                     if not self._lookups[lookup_name][val]:
                         del self._lookups[lookup_name][val]
         except Exception as e:
-            logger.warning("lookup_remove_failed", lookup_name=lookup_name, pk=pk, error=str(e))
+            logger.warning(
+                "lookup_remove_failed", lookup_name=lookup_name, pk=pk, error=str(e)
+            )
 
-    def _update_all_lookups(self, pk: Any, new_item: T, old_item: Optional[T] = None) -> None:
+    def _update_all_lookups(
+        self, pk: Any, new_item: T, old_item: T | None = None
+    ) -> None:
         """Update all lookups for a given primary key.
 
         Args:
@@ -376,9 +384,9 @@ class OMem(BaseMem[T], Generic[T]):
 
     def add(
         self,
-        items: Union[T, List[T]],
+        items: T | list[T],
         *,
-        source_id: Optional[str] = None,
+        source_id: str | None = None,
     ) -> None:
         """Add item(s) to memory. Automatically merges duplicates by key.
 
@@ -419,7 +427,7 @@ class OMem(BaseMem[T], Generic[T]):
             record.raw_items.extend(item.model_dump() for item in items)
 
         # Group incoming items by key
-        key_to_items: Dict[Any, List[T]] = {}
+        key_to_items: dict[Any, list[T]] = {}
         for item in items:
             key = self.key_extractor(item)
             if key not in key_to_items:
@@ -427,8 +435,8 @@ class OMem(BaseMem[T], Generic[T]):
             key_to_items[key].append(item)
 
         # Partition: direct insert vs merge candidates
-        to_insert: List[T] = []
-        to_merge: List[T] = []
+        to_insert: list[T] = []
+        to_merge: list[T] = []
 
         for key, new_items in key_to_items.items():
             if len(new_items) == 1 and key not in self._storage:
@@ -444,7 +452,7 @@ class OMem(BaseMem[T], Generic[T]):
         if to_merge:
             # Snapshot old items before merge for lookup cleanup
             items_to_update_keys = set()
-            old_items_map: Dict[Any, T] = {}
+            old_items_map: dict[Any, T] = {}
 
             for item in to_merge:
                 pk = self.key_extractor(item)
@@ -496,7 +504,7 @@ class OMem(BaseMem[T], Generic[T]):
             return True
         return False
 
-    def get(self, key: Any) -> Optional[T]:
+    def get(self, key: Any) -> T | None:
         """Retrieve an entity by key.
 
         Args:
@@ -513,7 +521,7 @@ class OMem(BaseMem[T], Generic[T]):
         self.clear_index()
         logger.info("memory_cleared")
 
-    def remove_many(self, keys: List[Any]) -> Tuple[List[Any], List[Any]]:
+    def remove_many(self, keys: list[Any]) -> tuple[list[Any], list[Any]]:
         """Remove multiple items by key in one batch.
 
         Unlike repeated :meth:`remove` calls, this does **not** clear the
@@ -526,8 +534,8 @@ class OMem(BaseMem[T], Generic[T]):
         Returns:
             Tuple ``(removed_keys, not_found_keys)``.
         """
-        removed: List[Any] = []
-        not_found: List[Any] = []
+        removed: list[Any] = []
+        not_found: list[Any] = []
         for key in keys:
             item = self._storage.pop(key, None)
             if item is None:
@@ -540,7 +548,7 @@ class OMem(BaseMem[T], Generic[T]):
             logger.debug("items_removed", count=len(removed), size=self.size)
         return removed, not_found
 
-    def upsert(self, items: Union[T, List[T]]) -> None:
+    def upsert(self, items: T | list[T]) -> None:
         """Insert or replace items by key, bypassing merge.
 
         Unlike :meth:`add`, an existing item with the same key is **replaced
@@ -577,8 +585,8 @@ class OMem(BaseMem[T], Generic[T]):
     def sync_index(
         self,
         *,
-        removed_keys: Optional[Iterable[Any]] = None,
-        upserted_keys: Optional[Iterable[Any]] = None,
+        removed_keys: Iterable[Any] | None = None,
+        upserted_keys: Iterable[Any] | None = None,
     ) -> bool:
         """Incrementally update the vector index for the affected keys only.
 
@@ -616,7 +624,7 @@ class OMem(BaseMem[T], Generic[T]):
         # state (no index -> lazy full rebuild), not a half-patched one.
         self._index = None
         try:
-            id_by_key: Dict[Any, str] = {}
+            id_by_key: dict[Any, str] = {}
             for doc_id, doc in vs.docstore._dict.items():
                 doc_key = doc.metadata.get("key")
                 if doc_key is not None:
@@ -630,7 +638,7 @@ class OMem(BaseMem[T], Generic[T]):
             if stale_ids:
                 vs.delete(stale_ids)
 
-            documents: List[Document] = []
+            documents: list[Document] = []
             for key in set(upserted_keys):
                 item = self._storage.get(key)
                 if item is None:
@@ -665,9 +673,9 @@ class OMem(BaseMem[T], Generic[T]):
         *,
         remove_fact: str | None = None,
         instruction: str | None = None,
-        editor: Optional[BaseChatModel] = None,
+        editor: BaseChatModel | None = None,
         dry_run: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """LLM-assisted semantic edit of one stored item.
 
         The stored item is rewritten under the **same schema** with the given
@@ -754,9 +762,7 @@ class OMem(BaseMem[T], Generic[T]):
         if self.has_index():
             index_patched = self.sync_index(upserted_keys=[key])
 
-        logger.info(
-            "item_edited", key=key, applied=not dry_run, changed=True
-        )
+        logger.info("item_edited", key=key, applied=not dry_run, changed=True)
         return {
             "changed": True,
             "applied": not dry_run,
@@ -798,6 +804,58 @@ class OMem(BaseMem[T], Generic[T]):
             # Reattach so the post-block sync_index() patches it in place.
             self._index = vs
 
+    def tag_source(
+        self,
+        source_id: str,
+        *,
+        add: list[str] | None = None,
+        remove: list[str] | None = None,
+    ) -> list[str]:
+        """Add/remove tags on one source. Returns the resulting tag list.
+
+        Raises:
+            KeyError: If ``source_id`` is not in the ledger.
+        """
+        self._require_track_sources()
+        record = self._sources.get(source_id)
+        if record is None:
+            raise KeyError(f"Unknown source_id: {source_id!r}")
+        for tag in add or []:
+            if tag not in record.tags:
+                record.tags.append(tag)
+        for tag in remove or []:
+            if tag in record.tags:
+                record.tags.remove(tag)
+        logger.debug("source_tagged", source_id=source_id, tags=record.tags)
+        return list(record.tags)
+
+    def source_tags(self, source_id: str) -> list[str]:
+        """Return the tags of one source (empty if unknown/untagged)."""
+        record = self._sources.get(source_id)
+        return list(record.tags) if record else []
+
+    def _keys_for_filter(
+        self,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> set:
+        """Key allowlist for scoped search (union of matching sources).
+
+        A key is in the allowlist when ANY of its contributing sources
+        matches by source_id or by tag.
+        """
+        wanted_sids = set(source_ids or [])
+        wanted_tags = set(tags or [])
+        allow: set = set()
+        for sid, record in self._sources.items():
+            matched = sid in wanted_sids or bool(set(record.tags) & wanted_tags)
+            if not matched:
+                continue
+            for raw in record.raw_items:
+                allow.add(self.key_extractor(self.memory_schema.model_validate(raw)))
+        return allow
+
     def _require_track_sources(self) -> None:
         if not self.track_sources:
             raise RuntimeError(
@@ -805,9 +863,9 @@ class OMem(BaseMem[T], Generic[T]):
                 "track_sources=True to use provenance features."
             )
 
-    def _raw_items_from_other_sources(self, key: Any, exclude: str) -> List[T]:
+    def _raw_items_from_other_sources(self, key: Any, exclude: str) -> list[T]:
         """Re-materialize raw items for ``key`` from all sources except ``exclude``."""
-        out: List[T] = []
+        out: list[T] = []
         for sid, record in self._sources.items():
             if sid == exclude:
                 continue
@@ -817,7 +875,7 @@ class OMem(BaseMem[T], Generic[T]):
                     out.append(item)
         return out
 
-    def _rollback_source(self, source_id: str, *, strategy: str) -> Dict[str, Any]:
+    def _rollback_source(self, source_id: str, *, strategy: str) -> dict[str, Any]:
         """Roll back one source's contributions. Pops the ledger record.
 
         Returns:
@@ -825,22 +883,22 @@ class OMem(BaseMem[T], Generic[T]):
             ``remerged_keys`` (keys re-merged from surviving sources).
         """
         record = self._sources.pop(source_id)
-        raw_items = [
-            self.memory_schema.model_validate(raw) for raw in record.raw_items
-        ]
+        raw_items = [self.memory_schema.model_validate(raw) for raw in record.raw_items]
         affected_keys = {self.key_extractor(item) for item in raw_items}
 
         touched = strategy == "touched"
-        removed_keys: List[Any] = []
-        remerged_keys: List[Any] = []
+        removed_keys: list[Any] = []
+        remerged_keys: list[Any] = []
 
         for key in affected_keys:
             current = self._storage.get(key)
             if current is None:
                 continue  # already gone (e.g. removed with an earlier rollback)
 
-            survivors = [] if touched else self._raw_items_from_other_sources(
-                key, exclude=source_id
+            survivors = (
+                []
+                if touched
+                else self._raw_items_from_other_sources(key, exclude=source_id)
             )
 
             if survivors:
@@ -877,7 +935,7 @@ class OMem(BaseMem[T], Generic[T]):
 
     def remove_source(
         self, source_id: str, *, strategy: str = "exact"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Remove every contribution of one source document.
 
         With ``strategy="exact"`` (default), keys that other sources also
@@ -919,8 +977,8 @@ class OMem(BaseMem[T], Generic[T]):
     def record_source(
         self,
         source_id: str,
-        raw_items: List[Dict[str, Any]],
-        content_hash: Optional[str] = None,
+        raw_items: list[dict[str, Any]],
+        content_hash: str | None = None,
     ) -> None:
         """Record raw items in the source ledger **without** merging them
         into storage.
@@ -944,18 +1002,16 @@ class OMem(BaseMem[T], Generic[T]):
         record.raw_items.extend(raw_items)
         if content_hash is not None:
             record.content_hash = content_hash
-        logger.debug(
-            "source_recorded", source_id=source_id, items=len(raw_items)
-        )
+        logger.debug("source_recorded", source_id=source_id, items=len(raw_items))
 
     def upsert_source(
         self,
         source_id: str,
-        items: Union[T, List[T]],
+        items: T | list[T],
         *,
-        content_hash: Optional[str] = None,
+        content_hash: str | None = None,
         strategy: str = "exact",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Replace one source document: roll back the old version, merge the new.
 
         This is the document-level upsert primitive. The previous version's
@@ -985,7 +1041,7 @@ class OMem(BaseMem[T], Generic[T]):
                     f"Item must be {self.memory_schema.__name__}, got {type(item).__name__}"
                 )
 
-        report: Dict[str, Any] = {
+        report: dict[str, Any] = {
             "source_id": source_id,
             "strategy": strategy,
             "removed_keys": [],
@@ -1009,8 +1065,7 @@ class OMem(BaseMem[T], Generic[T]):
 
         self.sync_index(
             removed_keys=set(report["removed_keys"]),
-            upserted_keys=set(report["remerged_keys"])
-            | set(report["added_keys"]),
+            upserted_keys=set(report["remerged_keys"]) | set(report["added_keys"]),
         )
         report["index_patched"] = self.has_index()
         logger.info(
@@ -1022,7 +1077,7 @@ class OMem(BaseMem[T], Generic[T]):
         )
         return report
 
-    def sources(self) -> Dict[str, Dict[str, Any]]:
+    def sources(self) -> dict[str, dict[str, Any]]:
         """Summarize the source ledger.
 
         Returns:
@@ -1036,7 +1091,7 @@ class OMem(BaseMem[T], Generic[T]):
             for source_id, record in self._sources.items()
         }
 
-    def dump_sources(self, file_path: Union[str, Path]) -> None:
+    def dump_sources(self, file_path: str | Path) -> None:
         """Save the source ledger to a JSON file.
 
         Pair with :meth:`dump_data` so provenance survives persistence.
@@ -1050,7 +1105,7 @@ class OMem(BaseMem[T], Generic[T]):
             json.dump(payload, f, ensure_ascii=False, indent=2)
         logger.info("sources_persisted", path=str(file_path), count=len(payload))
 
-    def load_sources(self, file_path: Union[str, Path]) -> None:
+    def load_sources(self, file_path: str | Path) -> None:
         """Load the source ledger from a JSON file written by :meth:`dump_sources`.
 
         Args:
@@ -1059,12 +1114,8 @@ class OMem(BaseMem[T], Generic[T]):
         file_path = Path(file_path)
         with open(file_path, "r", encoding="utf-8") as f:
             payload = json.load(f)
-        self._sources = {
-            entry["source_id"]: SourceRecord(**entry) for entry in payload
-        }
-        logger.info(
-            "sources_loaded", path=str(file_path), count=len(self._sources)
-        )
+        self._sources = {entry["source_id"]: SourceRecord(**entry) for entry in payload}
+        logger.info("sources_loaded", path=str(file_path), count=len(self._sources))
 
     # --- Search & Indexing ---
 
@@ -1117,7 +1168,14 @@ class OMem(BaseMem[T], Generic[T]):
             logger.error("faiss_import_error")
             raise
 
-    def search(self, query: str, top_k: int = 5) -> List[T]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> list[T]:
         """Semantic search over memory using vector similarity.
 
         Automatically rebuilds index if not built. Returns entities ranked by
@@ -1126,6 +1184,10 @@ class OMem(BaseMem[T], Generic[T]):
         Args:
             query: Natural language query string.
             top_k: Number of results to return. Default: 5.
+            source_ids: Optional allowlist — only return items contributed by
+                these source ids (requires track_sources ledger entries).
+            tags: Optional allowlist — only return items contributed by
+                sources carrying any of these tags.
 
         Returns:
             List of entities ranked by similarity.
@@ -1147,16 +1209,28 @@ class OMem(BaseMem[T], Generic[T]):
             logger.debug("index_empty_no_results")
             return []
 
+        filtered = bool(source_ids or tags)
+        # Over-fetch when filtering so in-scope items can still fill top_k.
+        fetch_k = max(top_k * 4, top_k) if filtered else top_k
+
         # Search using FAISS
         try:
-            docs = self._index.similarity_search(query, k=top_k)
+            docs = self._index.similarity_search(query, k=fetch_k)
+            allow = (
+                self._keys_for_filter(source_ids=source_ids, tags=tags)
+                if filtered
+                else None
+            )
             results = []
 
             for doc in docs:
                 try:
                     key = doc.metadata.get("key")
-                    if key is not None and key in self._storage:
-                        results.append(self._storage[key])
+                    if key is None or key not in self._storage:
+                        continue
+                    if allow is not None and key not in allow:
+                        continue
+                    results.append(self._storage[key])
                 except Exception as e:
                     logger.warning("search_result_restore_failed", error=str(e))
                     continue
@@ -1169,7 +1243,7 @@ class OMem(BaseMem[T], Generic[T]):
 
     # --- Persistence (Fine-grained v0.1.5+) ---
 
-    def dump_data(self, file_path: Union[str, Path]) -> None:
+    def dump_data(self, file_path: str | Path) -> None:
         """Save structured data to a JSON file (data only).
 
         Args:
@@ -1194,12 +1268,14 @@ class OMem(BaseMem[T], Generic[T]):
         models must never be mixed in one index.
         """
         embedder = self.embedder
-        model = getattr(embedder, "model", None) or getattr(
-            embedder, "model_name", None
-        ) or ""
+        model = (
+            getattr(embedder, "model", None)
+            or getattr(embedder, "model_name", None)
+            or ""
+        )
         return f"{type(embedder).__module__}.{type(embedder).__name__}:{model}"
 
-    def dump_index(self, folder_path: Union[str, Path]) -> None:
+    def dump_index(self, folder_path: str | Path) -> None:
         """Save vector index to a folder.
 
         Index files will be saved directly in this folder. A
@@ -1230,7 +1306,7 @@ class OMem(BaseMem[T], Generic[T]):
             logger.warning("index_save_failed", error=str(e))
             raise
 
-    def load_data(self, file_path: Union[str, Path]) -> None:
+    def load_data(self, file_path: str | Path) -> None:
         """Load structured data from a JSON file.
 
         Args:
@@ -1253,7 +1329,7 @@ class OMem(BaseMem[T], Generic[T]):
             logger.error("data_load_failed", error=str(e))
             raise
 
-    def load_index(self, folder_path: Union[str, Path]) -> None:
+    def load_index(self, folder_path: str | Path) -> None:
         """Load vector index from a folder.
 
         If the folder contains an ``index.meta.json`` written by a *different*
@@ -1298,7 +1374,7 @@ class OMem(BaseMem[T], Generic[T]):
             self._index = None
             raise
 
-    def dump_metadata(self, file_path: Union[str, Path]) -> None:
+    def dump_metadata(self, file_path: str | Path) -> None:
         """Save metadata to a JSON file.
 
         Args:
@@ -1319,7 +1395,7 @@ class OMem(BaseMem[T], Generic[T]):
         except Exception as e:
             logger.warning("metadata_persist_failed", error=str(e))
 
-    def load_metadata(self, file_path: Union[str, Path]) -> None:
+    def load_metadata(self, file_path: str | Path) -> None:
         """Load metadata from a JSON file.
 
         Args:
@@ -1337,8 +1413,8 @@ class OMem(BaseMem[T], Generic[T]):
             logger.info("metadata_loaded", path=str(file_path))
             logger.debug(
                 "metadata_details",
-                schema=metadata.get('schema_name'),
-                size=metadata.get('size'),
+                schema=metadata.get("schema_name"),
+                size=metadata.get("size"),
             )
         except Exception as e:
             logger.warning("metadata_load_failed", error=str(e))

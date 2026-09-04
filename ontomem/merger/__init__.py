@@ -1,24 +1,23 @@
 """Merger strategies for ontomem."""
 
+from collections.abc import Callable
 from enum import Enum, nonmember
-from typing import TypeVar, Callable
+from typing import TypeVar
 
+from langchain.chat_models import BaseChatModel
 from pydantic import BaseModel
 
 from .base import BaseMerger
-from .classic_merger.merge_field import FieldMerger
-from .classic_merger.keep_incoming import KeepIncomingMerger
 from .classic_merger.keep_existing import KeepExistingMerger
+from .classic_merger.keep_incoming import KeepIncomingMerger
+from .classic_merger.merge_field import FieldMerger
 from .llm_merger import (
-    BaseLLMMerger,
     BalancedMerger,
+    BaseLLMMerger,
+    CustomRuleMerger,
     PreferExistingMerger,
     PreferIncomingMerger,
-    CustomRuleMerger,
 )
-
-from langchain.chat_models import BaseChatModel
-
 
 # Type definitions
 T = TypeVar("T", bound=BaseModel)
@@ -108,7 +107,7 @@ def create_merger(
         ...     strategy=MergeStrategy.MERGE_FIELD,
         ...     key_extractor=lambda x: x.id
         ... )
-        >>> 
+        >>>
         >>> # Custom rule merger with concurrency control
         >>> merger = create_merger(
         ...     strategy=MergeStrategy.LLM.CUSTOM_RULE,
@@ -156,13 +155,11 @@ def create_merger(
             raise ValueError(
                 f"LLM strategy '{strategy}' requires item_schema parameter."
             )
-        
+
         # Special handling for CUSTOM_RULE strategy
         if strategy == MergeStrategy.LLM.CUSTOM_RULE:
             if not rule:
-                raise ValueError(
-                    "Custom Rule LLM strategy requires 'rule' parameter."
-                )
+                raise ValueError("Custom Rule LLM strategy requires 'rule' parameter.")
             return CustomRuleMerger(
                 key_extractor=key_extractor,
                 llm_client=llm_client,
@@ -186,15 +183,15 @@ def create_merger(
 
 
 __all__ = [
-    "BaseMerger",
-    "FieldMerger",
-    "KeepIncomingMerger",
-    "KeepExistingMerger",
-    "BaseLLMMerger",
     "BalancedMerger",
+    "BaseLLMMerger",
+    "BaseMerger",
+    "CustomRuleMerger",
+    "FieldMerger",
+    "KeepExistingMerger",
+    "KeepIncomingMerger",
+    "MergeStrategy",
     "PreferExistingMerger",
     "PreferIncomingMerger",
-    "CustomRuleMerger",
-    "MergeStrategy",
     "create_merger",
 ]

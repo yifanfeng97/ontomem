@@ -1,14 +1,15 @@
 """Base class for LLM-powered merge strategies."""
 
 from abc import abstractmethod
-from typing import Any, Callable, List, Tuple, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
-from pydantic import BaseModel
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel
 
-from ..base import BaseMerger
 from ...utils.logging import get_logger
+from ..base import BaseMerger
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -55,7 +56,6 @@ class BaseLLMMerger(BaseMerger[T]):
 
         Subclasses override this to define their merge behavior.
         """
-        pass
 
     def build_prompt(self) -> ChatPromptTemplate:
         """Build the prompt template using the current system prompt.
@@ -63,10 +63,15 @@ class BaseLLMMerger(BaseMerger[T]):
         Returns:
             A ChatPromptTemplate containing the system prompt and the user input structure.
         """
-        return ChatPromptTemplate.from_messages([
-            ("system", self.system_prompt),
-            ("user", "Item A (existing):\n{item_existing}\n\nItem B (incoming):\n{item_incoming}")
-        ])
+        return ChatPromptTemplate.from_messages(
+            [
+                ("system", self.system_prompt),
+                (
+                    "user",
+                    "Item A (existing):\n{item_existing}\n\nItem B (incoming):\n{item_incoming}",
+                ),
+            ]
+        )
 
     def pair_merge(self, existing: T, incoming: T) -> T:
         """Merge a single pair using LLM (default implementation).
@@ -83,14 +88,18 @@ class BaseLLMMerger(BaseMerger[T]):
         """
         try:
             self.logger.debug("llm_single_merge_fallback")
-            
+
             prompt = self.build_prompt()
-            merge_chain = prompt | self.llm_client.with_structured_output(self.item_schema)
-            
-            merged = merge_chain.invoke({
-                "item_existing": existing.model_dump_json(indent=2),
-                "item_incoming": incoming.model_dump_json(indent=2),
-            })
+            merge_chain = prompt | self.llm_client.with_structured_output(
+                self.item_schema
+            )
+
+            merged = merge_chain.invoke(
+                {
+                    "item_existing": existing.model_dump_json(indent=2),
+                    "item_incoming": incoming.model_dump_json(indent=2),
+                }
+            )
             return merged
         except Exception as e:
             self.logger.error(
@@ -99,7 +108,7 @@ class BaseLLMMerger(BaseMerger[T]):
             )
             return incoming
 
-    def batch_merge(self, pairs: List[Tuple[T, T]]) -> List[T]:
+    def batch_merge(self, pairs: list[tuple[T, T]]) -> list[T]:
         """Batch merge multiple pairs using LLM (optimized).
 
         This unified implementation is used by all LLM-based strategies.
@@ -136,7 +145,7 @@ class BaseLLMMerger(BaseMerger[T]):
             # Control max concurrency using max_workers parameter
             config = {"max_concurrency": self.max_workers} if self.max_workers else None
             merged_results = merge_chain.batch(inputs, config=config)
-            
+
             self.logger.info("llm_batch_merge_success", pairs=len(merged_results))
             return merged_results
 

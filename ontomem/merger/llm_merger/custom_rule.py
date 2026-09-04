@@ -1,6 +1,6 @@
 """Custom rule LLM merger."""
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel
@@ -21,11 +21,11 @@ class CustomRuleMerger(BaseLLMMerger):
 
     Example:
         >>> from datetime import datetime
-        >>> 
+        >>>
         >>> def time_based_rule():
         ...     hour = datetime.now().hour
         ...     return f"Current hour is {hour}. Use recent data after 18:00."
-        >>> 
+        >>>
         >>> merger = CustomRuleMerger(
         ...     key_extractor=lambda x: x.id,
         ...     llm_client=llm_client,
@@ -41,7 +41,7 @@ class CustomRuleMerger(BaseLLMMerger):
         llm_client: BaseChatModel,
         item_schema: type[BaseModel],
         rule: str,
-        dynamic_rule: Optional[Callable[[], str]] = None,
+        dynamic_rule: Callable[[], str] | None = None,
         max_workers: int = 5,
     ):
         """Initialize custom rule LLM merger.

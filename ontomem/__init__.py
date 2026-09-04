@@ -4,18 +4,18 @@ A production-grade Python library for building intelligent semantic memory
 with automatic deduplication, merging, and vector-based search.
 """
 
-from .core.omem import OMem
 from .core.base import BaseMem
+from .core.omem import OMem
 from .merger import (
-    MergeStrategy,
+    BalancedMerger,
+    BaseLLMMerger,
     BaseMerger,
     FieldMerger,
-    KeepIncomingMerger,
     KeepExistingMerger,
-    BaseLLMMerger,
-    BalancedMerger,
+    KeepIncomingMerger,
+    MergeStrategy,
     PreferExistingMerger,
-    PreferIncomingMerger
+    PreferIncomingMerger,
 )
 from .utils.logging import configure_logging, get_logger, set_log_level
 
