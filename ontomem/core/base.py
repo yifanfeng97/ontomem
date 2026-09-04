@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel
@@ -22,21 +22,18 @@ class BaseMem(ABC, Generic[T]):
 
     @property
     @abstractmethod
-    def keys(self) -> List[Any]:
+    def keys(self) -> list[Any]:
         """Return all unique keys in memory."""
-        pass
 
     @property
     @abstractmethod
-    def items(self) -> List[T]:
+    def items(self) -> list[T]:
         """Return all entity instances in memory."""
-        pass
 
     @property
     @abstractmethod
     def size(self) -> int:
         """Return the number of entities in memory."""
-        pass
 
     def empty(self) -> bool:
         """Check if memory is empty.
@@ -53,46 +50,38 @@ class BaseMem(ABC, Generic[T]):
         Returns:
             True if index exists and is ready for search.
         """
-        pass
 
     @abstractmethod
-    def add(self, items: Union[T, List[T]]) -> None:
+    def add(self, items: T | list[T]) -> None:
         """Add item(s) to memory."""
-        pass
 
     @abstractmethod
     def remove(self, key: Any) -> bool:
         """Remove an item by key."""
-        pass
 
     @abstractmethod
-    def get(self, key: Any) -> Optional[T]:
+    def get(self, key: Any) -> T | None:
         """Retrieve an entity by key."""
-        pass
 
     @abstractmethod
     def clear(self) -> None:
         """Wipe all memory."""
-        pass
 
     @abstractmethod
     def clear_index(self) -> None:
         """Wipe the vector index."""
-        pass
 
     @abstractmethod
     def build_index(self, force: bool = False) -> None:
         """Build/rebuild the vector index."""
-        pass
 
     @abstractmethod
-    def search(self, query: str, top_k: int = 5) -> List[T]:
+    def search(self, query: str, top_k: int = 5) -> list[T]:
         """Semantic search over memory."""
-        pass
 
     # --- Incremental Index Maintenance & Editing (v0.3.0+) ---
 
-    def remove_many(self, keys: List[Any]) -> Tuple[List[Any], List[Any]]:
+    def remove_many(self, keys: list[Any]) -> tuple[list[Any], list[Any]]:
         """Remove multiple items by key without dropping the vector index.
 
         Pair with :meth:`sync_index` to patch the index incrementally.
@@ -100,15 +89,15 @@ class BaseMem(ABC, Generic[T]):
         """
         raise NotImplementedError
 
-    def upsert(self, items: Union[T, List[T]]) -> None:
+    def upsert(self, items: T | list[T]) -> None:
         """Insert or replace items by key, bypassing merge."""
         raise NotImplementedError
 
     def sync_index(
         self,
         *,
-        removed_keys: Optional[List[Any]] = None,
-        upserted_keys: Optional[List[Any]] = None,
+        removed_keys: list[Any] | None = None,
+        upserted_keys: list[Any] | None = None,
     ) -> bool:
         """Patch the vector index in place for the affected keys.
 
@@ -122,73 +111,67 @@ class BaseMem(ABC, Generic[T]):
         self,
         key: Any,
         *,
-        remove_fact: Optional[str] = None,
-        instruction: Optional[str] = None,
-        editor: Optional[BaseChatModel] = None,
+        remove_fact: str | None = None,
+        instruction: str | None = None,
+        editor: BaseChatModel | None = None,
         dry_run: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """LLM-assisted semantic edit of one stored item."""
         raise NotImplementedError
 
     # --- Fine-grained Persistence (v0.1.5+) ---
 
     @abstractmethod
-    def dump_data(self, file_path: Union[str, Path]) -> None:
+    def dump_data(self, file_path: str | Path) -> None:
         """Save structured data to a JSON file (data only).
 
         Args:
             file_path: File path to save the data (e.g., "memory.json").
         """
-        pass
 
     @abstractmethod
-    def dump_index(self, folder_path: Union[str, Path]) -> None:
+    def dump_index(self, folder_path: str | Path) -> None:
         """Save vector index to a folder.
 
         Args:
             folder_path: Folder path where index files will be saved.
         """
-        pass
 
     @abstractmethod
-    def load_data(self, file_path: Union[str, Path]) -> None:
+    def load_data(self, file_path: str | Path) -> None:
         """Load structured data from a JSON file.
 
         Args:
             file_path: File path to load the data from.
         """
-        pass
 
     @abstractmethod
-    def load_index(self, folder_path: Union[str, Path]) -> None:
+    def load_index(self, folder_path: str | Path) -> None:
         """Load vector index from a folder.
 
         Args:
             folder_path: Folder path containing index files.
         """
-        pass
 
     @abstractmethod
-    def dump_metadata(self, file_path: Union[str, Path]) -> None:
+    def dump_metadata(self, file_path: str | Path) -> None:
         """Save metadata to a JSON file.
 
         Args:
             file_path: File path to save metadata.
         """
-        pass
 
     @abstractmethod
-    def load_metadata(self, file_path: Union[str, Path]) -> None:
+    def load_metadata(self, file_path: str | Path) -> None:
         """Load metadata from a JSON file.
 
         Args:
             file_path: File path to load metadata from.
         """
-        pass
 
     # --- Convenience Methods ---
 
-    def dump(self, folder_path: Union[str, Path]) -> None:
+    def dump(self, folder_path: str | Path) -> None:
         """Save memory state to disk (data + metadata + index).
 
         Saves to the folder:
@@ -206,7 +189,7 @@ class BaseMem(ABC, Generic[T]):
         self.dump_metadata(folder_path / "metadata.json")
         self.dump_index(folder_path / "faiss_index")
 
-    def load(self, folder_path: Union[str, Path]) -> None:
+    def load(self, folder_path: str | Path) -> None:
         """Load memory state from disk (data + metadata + index).
 
         Loads from the folder:

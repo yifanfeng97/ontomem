@@ -7,7 +7,8 @@ by organizing merges into logarithmic rounds, similar to tournament elimination.
 import logging
 import math
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar
+from collections.abc import Callable
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -65,7 +66,7 @@ class BaseMerger(ABC, Generic[T]):
         self,
         key_extractor: Callable[[T], Any],
         *,
-        logger_instance: Optional[logging.Logger] = None,
+        logger_instance: logging.Logger | None = None,
     ):
         """Initialize the merger.
 
@@ -98,9 +99,8 @@ class BaseMerger(ABC, Generic[T]):
             ...     # Keep the newer item
             ...     return incoming
         """
-        pass
 
-    def batch_merge(self, pairs: List[tuple[T, T]]) -> List[T]:
+    def batch_merge(self, pairs: list[tuple[T, T]]) -> list[T]:
         """Batch merge multiple pairs (optional override for optimization).
 
         Default implementation: Sequentially call pair_merge() for each pair.
@@ -129,7 +129,7 @@ class BaseMerger(ABC, Generic[T]):
 
     # ==================== Core Algorithm ====================
 
-    def merge(self, items: List[T]) -> List[T]:
+    def merge(self, items: list[T]) -> list[T]:
         """Main entry point: Deduplicate and merge items with cross-key batching.
 
         Algorithm:
@@ -174,7 +174,7 @@ class BaseMerger(ABC, Generic[T]):
 
         return merged_items
 
-    def _group_by_key(self, items: List[T]) -> dict[Any, List[T]]:
+    def _group_by_key(self, items: list[T]) -> dict[Any, list[T]]:
         """Group items by their unique key.
 
         Args:
@@ -202,7 +202,7 @@ class BaseMerger(ABC, Generic[T]):
                 self.logger.warning("key_extraction_failed", error=str(e))
         return dict(groups)
 
-    def _cross_key_tournament_merge(self, groups: Dict[Any, List[T]]) -> List[T]:
+    def _cross_key_tournament_merge(self, groups: dict[Any, list[T]]) -> list[T]:
         """Cross-key tournament merge: Process all keys simultaneously.
 
         **Key Optimization**: Instead of merging each key independently, this method
@@ -250,7 +250,7 @@ class BaseMerger(ABC, Generic[T]):
             Total API calls: 2 (vs 4 in old approach)
         """
         # Track current round of items for each key
-        key_rounds: Dict[Any, List[T]] = {
+        key_rounds: dict[Any, list[T]] = {
             key: items[:] for key, items in groups.items()
         }
 
@@ -269,7 +269,7 @@ class BaseMerger(ABC, Generic[T]):
         # Continue until all keys have exactly 1 item
         while any(len(items) > 1 for items in key_rounds.values()):
             round_num += 1
-            all_pairs: List[Tuple[T, T]] = []  # Collect pairs from ALL keys
+            all_pairs: list[tuple[T, T]] = []  # Collect pairs from ALL keys
             pair_to_key = []  # Track which key each pair belongs to
 
             # For each key, pair up items in current round
@@ -296,7 +296,7 @@ class BaseMerger(ABC, Generic[T]):
 
                 # Distribute results back to keys
                 result_idx = 0
-                for key in key_rounds.keys():
+                for key in key_rounds:
                     if len(key_rounds[key]) <= 1:
                         continue
 

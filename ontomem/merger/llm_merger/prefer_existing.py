@@ -32,7 +32,7 @@ class PreferExistingMerger(BaseLLMMerger[T]):
     """LLM merger that prefers existing item values when semantic conflicts arise.
 
     Merges information from both items, combining data to create a complete result.
-    When semantic conflicts occur (both items have valid but different values), 
+    When semantic conflicts occur (both items have valid but different values),
     the existing item's value is preferred.
 
     Key Features:

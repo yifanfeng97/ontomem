@@ -28,6 +28,7 @@ class SourceRecord(BaseModel):
 
     source_id: str
     content_hash: str | None = None
+    tags: list[str] = []
     raw_items: list[dict[str, Any]] = []
 
     @property

@@ -32,7 +32,7 @@ class PreferIncomingMerger(BaseLLMMerger[T]):
     """LLM merger that prefers incoming item values when semantic conflicts arise.
 
     Merges information from both items, combining data to create a complete result.
-    When semantic conflicts occur (both items have valid but different values), 
+    When semantic conflicts occur (both items have valid but different values),
     the incoming item's value is preferred.
 
     Key Features:
