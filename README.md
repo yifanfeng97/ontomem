@@ -17,11 +17,12 @@
 
 <div align="center">
 
-<a href="https://pypi.org/project/ontomem/"><img src="https://img.shields.io/pypi/v/ontomem.svg" alt="PyPI version"></a>
-<a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+"></a>
-<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
-<a href="https://pypi.org/project/ontomem/"><img src="https://img.shields.io/pypi/dm/ontomem.svg" alt="PyPI downloads"></a>
-<a href="https://yifanfeng97.github.io/ontomem/"><img src="https://img.shields.io/badge/docs-latest-green" alt="Documentation"></a>
+<a href="https://pypi.org/project/ontomem/"><img src="https://img.shields.io/pypi/v/ontomem?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=3776ab" alt="PyPI Version"></a>
+<a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-3776ab?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1a2e" alt="Python Version"></a>
+<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache%202.0-06b6d4?style=for-the-badge&labelColor=1a1a2e" alt="License"></a>
+<a href="https://yifanfeng97.github.io/ontomem/"><img src="https://img.shields.io/badge/docs-online-3b82f6?style=for-the-badge&logo=readthedocs&logoColor=white&labelColor=1a1a2e" alt="Docs"></a>
+<a href="https://github.com/yifanfeng97/ontomem/actions/workflows/test.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/yifanfeng97/ontomem/test.yml?branch=main&style=for-the-badge&logo=github&labelColor=1a1a2e&label=Tests" alt="Tests"></a>
+<a href="https://pypi.org/project/ontomem/"><img src="https://img.shields.io/pypi/dm/ontomem?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=facc15" alt="PyPI Downloads"></a>
 
 </div>
 
@@ -34,6 +35,14 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
 ## 📰 News
 <details>
 <summary>Details</summary>
+
+- **[2026-09-04] 🎉 v0.6.0: Source Tags & Scoped Search**:
+  - **`tag_source()` / `source_tags()`**: tag documents in the ledger (persisted with dump_sources)
+  - **Scoped search**: `search(query, source_ids=[...], tags=[...])` — retrieve only within a subset of documents, with automatic over-fetch
+  - **Union semantics**: a key matches when ANY of its contributing sources fits the filter
+
+- **[2026-09-04] 🎉 v0.5.0: `record_source()`**:
+  - **Ledger-only capture**: record raw items without merging them into storage — built for pipelines that merge separately (chunk-level extraction + custom merge)
 
 - **[2026-09-05] 🎉 v0.4.0: Attributed Memory (Source Ledger)**:
   - **Per-document rollback**: `add(items, source_id=...)` records raw pre-merge results; `remove_source()` rolls back exactly (re-merging surviving sources), `upsert_source()` replaces a document in one step

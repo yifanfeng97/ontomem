@@ -16,11 +16,12 @@
 
 <div align="center">
 
-<a href="https://pypi.org/project/ontomem/"><img src="https://img.shields.io/pypi/v/ontomem.svg" alt="PyPI 版本"></a>
-<a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+"></a>
-<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
-<a href="https://pypi.org/project/ontomem/"><img src="https://img.shields.io/pypi/dm/ontomem.svg" alt="PyPI 下载数"></a>
-<a href="https://yifanfeng97.github.io/ontomem/"><img src="https://img.shields.io/badge/docs-latest-green" alt="Documentation"></a>
+<a href="https://pypi.org/project/ontomem/"><img src="https://img.shields.io/pypi/v/ontomem?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=3776ab" alt="PyPI 版本"></a>
+<a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-3776ab?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1a2e" alt="Python 版本"></a>
+<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache%202.0-06b6d4?style=for-the-badge&labelColor=1a1a2e" alt="许可证"></a>
+<a href="https://yifanfeng97.github.io/ontomem/"><img src="https://img.shields.io/badge/文档在线-3b82f6?style=for-the-badge&logo=readthedocs&logoColor=white&labelColor=1a1a2e" alt="文档"></a>
+<a href="https://github.com/yifanfeng97/ontomem/actions/workflows/test.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/yifanfeng97/ontomem/test.yml?branch=main&style=for-the-badge&logo=github&labelColor=1a1a2e&label=测试" alt="测试"></a>
+<a href="https://pypi.org/project/ontomem/"><img src="https://img.shields.io/pypi/dm/ontomem?style=for-the-badge&logo=pypi&logoColor=white&labelColor=1a1a2e&color=facc15" alt="PyPI 下载数"></a>
 </div>
 
 
@@ -31,6 +32,14 @@
 ## 📰 最新动态
 <details>
 <summary>详情</summary>
+
+- **[2026-09-04] 🎉 v0.6.0：来源标签与范围检索**：
+  - **`tag_source()` / `source_tags()`**：在账本中为文档打标签（随 dump_sources 持久化）
+  - **范围检索**：`search(query, source_ids=[...], tags=[...])`——只在部分文档范围内检索，自动扩取保证召回
+  - **并集语义**：key 的任一贡献来源命中过滤条件即保留
+
+- **[2026-09-04] 🎉 v0.5.0：`record_source()`**：
+  - **仅记账捕获**：把原始条目记入来源账本而不合并入存储——为"先抽取、后自行合并"的管线设计
 
 - **[2026-09-05] 🎉 v0.4.0：带出处的记忆（来源账本）**：
   - **按文档精确回滚**：`add(items, source_id=...)` 记录合并前原始结果；`remove_source()` 精确回滚（重合并幸存来源），`upsert_source()` 一步完成文档替换
