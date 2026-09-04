@@ -8,6 +8,10 @@ OntoMem provides a comprehensive, well-structured API for building intelligent m
 The main module containing the OMem class and base classes.
 
 - **OMem**: Main memory management class
+  - Core: `add` / `remove` / `remove_many` / `get` / `upsert` / `clear`
+  - Index: `build_index` / `sync_index` (in-place patch) / `clear_index` / `index_built`
+  - Editing: `edit(key, remove_fact=|instruction=, dry_run=)` — LLM-assisted semantic editing
+  - Search: `search(query, top_k)`
 - **BaseMem**: Abstract base class for memory implementations
 
 ### `ontomem.merger`

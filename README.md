@@ -35,6 +35,12 @@ It excels at **Time-Series Consolidation**: effortlessly merging streaming obser
 <details>
 <summary>Details</summary>
 
+- **[2026-09-04] 🎉 v0.3.0: Incremental Index Maintenance & Semantic Editing**:
+  - **`sync_index()`**: Patch the FAISS index in place — delete/re-embed only the affected vectors instead of dropping the whole index (up to 200× fewer embedding calls on small edits)
+  - **`remove_many()` / `upsert()`**: Batch removal and replace-by-key semantics that preserve the index
+  - **`edit()`**: LLM-assisted single-item semantic editing — remove one wrong fact while keeping the rest, with key-invariance validation, dry-run, and in-place vector refresh
+  - **`index_built`**: Property alias for `has_index()`
+
 - **[2026-01-28] 🎉 v0.2.0: Lookups Feature Released**:
   - **Multi-dimensional Indexing**: Create O(1) secondary indices for fast queries by custom keys (name, location, time, etc.)
   - **Auto-maintained**: Indices automatically update when items merge or are removed

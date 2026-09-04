@@ -8,6 +8,10 @@ OntoMem 为构建智能记忆系统提供了一个全面、结构良好的 API�
 包含 OMem 类和基类的主模块。
 
 - **OMem**：主记忆管理类
+  - 核心：`add` / `remove` / `remove_many` / `get` / `upsert` / `clear`
+  - 索引：`build_index` / `sync_index`（原地修补）/ `clear_index` / `index_built`
+  - 编辑：`edit(key, remove_fact=|instruction=, dry_run=)`——大模型辅助的语义编辑
+  - 搜索：`search(query, top_k)`
 - **BaseMem**：记忆实现的抽象基类
 
 ### `ontomem.merger`

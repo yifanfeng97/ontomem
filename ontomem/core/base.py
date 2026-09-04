@@ -2,8 +2,9 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Generic, List, Optional, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
+from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -88,6 +89,46 @@ class BaseMem(ABC, Generic[T]):
     def search(self, query: str, top_k: int = 5) -> List[T]:
         """Semantic search over memory."""
         pass
+
+    # --- Incremental Index Maintenance & Editing (v0.3.0+) ---
+
+    def remove_many(self, keys: List[Any]) -> Tuple[List[Any], List[Any]]:
+        """Remove multiple items by key without dropping the vector index.
+
+        Pair with :meth:`sync_index` to patch the index incrementally.
+        Optional: the default implementation returns empty results.
+        """
+        raise NotImplementedError
+
+    def upsert(self, items: Union[T, List[T]]) -> None:
+        """Insert or replace items by key, bypassing merge."""
+        raise NotImplementedError
+
+    def sync_index(
+        self,
+        *,
+        removed_keys: Optional[List[Any]] = None,
+        upserted_keys: Optional[List[Any]] = None,
+    ) -> bool:
+        """Patch the vector index in place for the affected keys.
+
+        Returns:
+            True if patched in place; False when no index is built or
+            patching failed (fall back to :meth:`build_index`).
+        """
+        raise NotImplementedError
+
+    def edit(
+        self,
+        key: Any,
+        *,
+        remove_fact: Optional[str] = None,
+        instruction: Optional[str] = None,
+        editor: Optional[BaseChatModel] = None,
+        dry_run: bool = False,
+    ) -> Dict[str, Any]:
+        """LLM-assisted semantic edit of one stored item."""
+        raise NotImplementedError
 
     # --- Fine-grained Persistence (v0.1.5+) ---
 
