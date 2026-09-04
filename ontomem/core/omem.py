@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, 
 
 from pydantic import BaseModel
 from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
 
@@ -20,6 +21,23 @@ from ..utils.logging import configure_logging, get_logger
 from langchain_community.vectorstores import FAISS
 
 logger = get_logger(__name__)
+
+# System prompt for LLM-assisted single-item editing (OMem.edit).
+DEFAULT_EDIT_PROMPT = (
+    "You are a precise memory editor. You receive one stored item as JSON "
+    "and a removal target (a fact or an editing instruction).\n\n"
+    "RULES:\n"
+    "1. Rewrite the item so that the target fact (and only that fact) is removed "
+    "or the instruction is applied.\n"
+    "2. Keep every other field, value, and wording EXACTLY unchanged.\n"
+    "3. NEVER change the item's identifier — its key must stay: {key}\n"
+    "4. If the fact does not appear in the item, return it unchanged.\n"
+    "5. Do not add new information.\n\n"
+    "# Current item\n"
+    "{item_json}\n\n"
+    "# Removal target\n"
+    "{target}"
+)
 
 
 class OMem(BaseMem[T], Generic[T]):
@@ -185,6 +203,11 @@ class OMem(BaseMem[T], Generic[T]):
         Returns:
             True if index exists, False otherwise.
         """
+        return self._index is not None
+
+    @property
+    def index_built(self) -> bool:
+        """Property alias for :meth:`has_index`."""
         return self._index is not None
 
     # --- Lookups (Secondary Indices) ---
@@ -605,6 +628,112 @@ class OMem(BaseMem[T], Generic[T]):
             upserted=len(upserted_keys),
         )
         return True
+
+    def edit(
+        self,
+        key: Any,
+        *,
+        remove_fact: str | None = None,
+        instruction: str | None = None,
+        editor: Optional[BaseChatModel] = None,
+        dry_run: bool = False,
+    ) -> Dict[str, Any]:
+        """LLM-assisted semantic edit of one stored item.
+
+        The stored item is rewritten under the **same schema** with the given
+        fact removed or the instruction applied, then replaced via
+        :meth:`upsert` — merge semantics are bypassed. Guardrails:
+
+        - **Key invariance** — a rewrite that changes the item's key is
+          rejected (renaming is delete + create, not an edit).
+        - **No-op detection** — if the LLM returns the item unchanged, the
+          report says so and nothing is written.
+        - **Dry run** — ``dry_run=True`` returns the proposal without
+          applying it.
+        - **Index** — when a vector index is built, the item's vector is
+          re-embedded in place via :meth:`sync_index` instead of discarding
+          the index.
+
+        Args:
+            key: Key of the item to edit.
+            remove_fact: Fact to remove from the item (exclusive with
+                ``instruction``).
+            instruction: Free-form edit instruction (exclusive with
+                ``remove_fact``).
+            editor: Chat model performing the rewrite. Defaults to the
+                ``llm_client`` provided at initialization.
+            dry_run: Return the proposed rewrite without applying it.
+
+        Returns:
+            Report dict with ``changed``, ``applied``, ``old``, ``new``, and
+            ``index_patched`` (True when the built index was updated in
+            place).
+
+        Raises:
+            KeyError: If ``key`` is not present.
+            ValueError: If both or neither of ``remove_fact``/``instruction``
+                are given, or the rewrite changed the item's key.
+            RuntimeError: If no LLM is available for the rewrite.
+        """
+        if (remove_fact is None) == (instruction is None):
+            raise ValueError("Provide exactly one of remove_fact= or instruction=.")
+        target = remove_fact if remove_fact is not None else instruction
+
+        model = editor or self.llm_client
+        if model is None:
+            raise RuntimeError(
+                "edit() requires an LLM: pass editor=... or initialize OMem "
+                "with llm_client."
+            )
+
+        old = self.get(key)
+        if old is None:
+            raise KeyError(f"No item with key: {key!r}")
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", DEFAULT_EDIT_PROMPT),
+                ("human", "Apply it to the item now."),
+            ]
+        )
+        chain = prompt | model.with_structured_output(self.memory_schema)
+
+        new = chain.invoke(
+            {"item_json": old.model_dump_json(), "key": key, "target": target}
+        )
+        new_key = self.key_extractor(new)
+        if new_key != key:
+            raise ValueError(
+                f"Rejected rewrite: the item key changed ({key!r} -> {new_key!r}). "
+                "Renaming is not an edit; remove the old item and add the new "
+                "one explicitly."
+            )
+        if new == old:
+            return {
+                "changed": False,
+                "applied": False,
+                "old": old,
+                "new": new,
+                "index_patched": self.has_index(),
+            }
+
+        if not dry_run:
+            self.upsert(new)
+
+        index_patched = False
+        if self.has_index():
+            index_patched = self.sync_index(upserted_keys=[key])
+
+        logger.info(
+            "item_edited", key=key, applied=not dry_run, changed=True
+        )
+        return {
+            "changed": True,
+            "applied": not dry_run,
+            "old": old,
+            "new": new,
+            "index_patched": index_patched,
+        }
 
     def clear_index(self) -> None:
         """Clear the vector index without affecting stored items."""
