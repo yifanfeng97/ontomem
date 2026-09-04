@@ -916,6 +916,38 @@ class OMem(BaseMem[T], Generic[T]):
         )
         return report
 
+    def record_source(
+        self,
+        source_id: str,
+        raw_items: List[Dict[str, Any]],
+        content_hash: Optional[str] = None,
+    ) -> None:
+        """Record raw items in the source ledger **without** merging them
+        into storage.
+
+        For pipelines that merge separately (e.g. chunk-level extraction
+        followed by a custom merge step): record the raw results first via
+        this method, then merge into storage by your own means. The ledger
+        entry makes the source's contributions rollback-able via
+        :meth:`remove_source`.
+
+        Args:
+            source_id: Identifier of the source document.
+            raw_items: Raw items as ``model_dump()`` dicts (pre-merge).
+            content_hash: Optional hash of the source content.
+        """
+        self._require_track_sources()
+        record = self._sources.get(source_id)
+        if record is None:
+            record = SourceRecord(source_id=source_id)
+            self._sources[source_id] = record
+        record.raw_items.extend(raw_items)
+        if content_hash is not None:
+            record.content_hash = content_hash
+        logger.debug(
+            "source_recorded", source_id=source_id, items=len(raw_items)
+        )
+
     def upsert_source(
         self,
         source_id: str,

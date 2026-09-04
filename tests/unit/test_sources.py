@@ -261,6 +261,42 @@ class TestProvenanceIndexPatching:
         assert "a fact v2" in docs[0].page_content
 
 
+class TestRecordSource:
+    def test_records_without_merging_into_storage(self):
+        m = _memory()
+        m.record_source("s1", [Doc(doc_id="a", title="A").model_dump()])
+
+        # Ledger has it; storage does not (record_source is ledger-only).
+        assert "s1" in m.sources()
+        assert m.get("a") is None
+
+    def test_remove_source_rolls_back_recorded_items(self):
+        m = _memory()
+        m.record_source(
+            "s1",
+            [
+                Doc(doc_id="a", title="A", content="from s1").model_dump(),
+                Doc(doc_id="b", title="B", content="from s1").model_dump(),
+            ],
+        )
+        # Simulate a separate merge step having landed the items in storage.
+        m.add([Doc(doc_id="a", title="A"), Doc(doc_id="b", title="B")])
+
+        report = m.remove_source("s1", strategy="exact")
+
+        assert set(report["removed_keys"]) == {"a", "b"}
+        assert m._storage.get("a") is None
+        assert m._storage.get("b") is None
+
+    def test_record_source_extends_existing_entry(self):
+        m = _memory()
+        m.record_source("s1", [Doc(doc_id="a", title="A").model_dump()])
+        m.record_source("s1", [Doc(doc_id="b", title="B").model_dump()], content_hash="h")
+
+        assert len(m._sources["s1"].raw_items) == 2
+        assert m._sources["s1"].content_hash == "h"
+
+
 class TestSuspendedIndex:
     def test_exception_reattaches_index(self):
         m = _memory()
