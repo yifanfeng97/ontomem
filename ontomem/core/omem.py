@@ -5,12 +5,15 @@ with intelligent deduplication, merging strategies, and Faiss-based vector searc
 """
 
 import json
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from pydantic import BaseModel
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
+
+from .sources import SourceRecord
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
 
@@ -105,6 +108,7 @@ class OMem(BaseMem[T], Generic[T]):
         ] = MergeStrategy.LLM.BALANCED,
         fields_for_index: Optional[List[str]] = None,
         verbose: bool = False,
+        track_sources: bool = False,
         **kwargs: Any,
     ):
         """Initialize the Memory Store.
@@ -121,6 +125,10 @@ class OMem(BaseMem[T], Generic[T]):
             fields_for_index: (Optional) List of field names to embed for search.
                                If None, entire JSON is embedded.
             verbose: Enable DEBUG logging. Default False uses WARNING level (quiet mode).
+            track_sources: Enable the source ledger for provenance tracking
+                           (per-document rollback via remove_source/upsert_source).
+                           Raw items are stored per source_id, ~1.5-2x storage overhead.
+                           Default False.
             **kwargs: Additional arguments passed to create_merger() when strategy_or_merger is
                       a MergeStrategy enum. For example, rule="..." and dynamic_rule=... for
                       MergeStrategy.LLM.CUSTOM_RULE. Ignored if strategy_or_merger is a BaseMerger instance.
@@ -135,6 +143,10 @@ class OMem(BaseMem[T], Generic[T]):
         self.llm_client = llm_client
         self.embedder = embedder
         self.fields_for_index = fields_for_index or []
+
+        # Source ledger (provenance tracking, v0.4.0+). Opt-in.
+        self.track_sources = track_sources
+        self._sources: Dict[str, SourceRecord] = {}
 
         if self.fields_for_index:
             for field in self.fields_for_index:
@@ -362,7 +374,12 @@ class OMem(BaseMem[T], Generic[T]):
 
     # --- CRUD Operations ---
 
-    def add(self, items: Union[T, List[T]]) -> None:
+    def add(
+        self,
+        items: Union[T, List[T]],
+        *,
+        source_id: Optional[str] = None,
+    ) -> None:
         """Add item(s) to memory. Automatically merges duplicates by key.
 
         If an item with the same key already exists, the new item(s) and
@@ -370,6 +387,11 @@ class OMem(BaseMem[T], Generic[T]):
 
         Args:
             items: Single entity or list of entities to add.
+            source_id: Optional source attribution. When ``track_sources``
+                is enabled and a ``source_id`` is given, the raw items are
+                recorded in the source ledger so the source's contributions
+                can later be rolled back exactly via
+                :meth:`remove_source` / :meth:`upsert_source`.
 
         Raises:
             TypeError: If item is not of memory_schema type.
@@ -387,6 +409,14 @@ class OMem(BaseMem[T], Generic[T]):
                 raise TypeError(
                     f"Item must be {self.memory_schema.__name__}, got {type(item).__name__}"
                 )
+
+        # Source ledger capture (raw, pre-merge)
+        if source_id is not None and self.track_sources:
+            record = self._sources.get(source_id)
+            if record is None:
+                record = SourceRecord(source_id=source_id)
+                self._sources[source_id] = record
+            record.raw_items.extend(item.model_dump() for item in items)
 
         # Group incoming items by key
         key_to_items: Dict[Any, List[T]] = {}
@@ -740,6 +770,267 @@ class OMem(BaseMem[T], Generic[T]):
         self._index = None
         logger.info("index_cleared")
 
+    # --- Source Ledger & Provenance (v0.4.0+, requires track_sources=True) ---
+
+    @contextmanager
+    def suspended_index(self):
+        """Temporarily detach the vector index while mutating storage.
+
+        Inside this block, ``add()`` / ``remove()`` / ``remove_many()`` /
+        ``upsert()`` do **not** clear or touch the index. The caller is
+        responsible for tracking affected keys and calling
+        :meth:`sync_index` afterwards — on success the (patched) index is
+        reattached; on failure the index stays detached and is lazily
+        rebuilt from storage.
+
+        Yields:
+            The detached vectorstore (or None if no index was built).
+        """
+        vs = self._index
+        self._index = None
+        try:
+            yield vs
+        except Exception:
+            # Mutations failed midway — reattach the untouched index.
+            self._index = vs
+            raise
+
+    def _require_track_sources(self) -> None:
+        if not self.track_sources:
+            raise RuntimeError(
+                "Source ledger is disabled. Initialize OMem with "
+                "track_sources=True to use provenance features."
+            )
+
+    def _raw_items_from_other_sources(self, key: Any, exclude: str) -> List[T]:
+        """Re-materialize raw items for ``key`` from all sources except ``exclude``."""
+        out: List[T] = []
+        for sid, record in self._sources.items():
+            if sid == exclude:
+                continue
+            for raw in record.raw_items:
+                item = self.memory_schema.model_validate(raw)
+                if self.key_extractor(item) == key:
+                    out.append(item)
+        return out
+
+    def _rollback_source(self, source_id: str, *, strategy: str) -> Dict[str, Any]:
+        """Roll back one source's contributions. Pops the ledger record.
+
+        Returns:
+            Report dict with ``removed_keys`` (keys deleted outright) and
+            ``remerged_keys`` (keys re-merged from surviving sources).
+        """
+        record = self._sources.pop(source_id)
+        raw_items = [
+            self.memory_schema.model_validate(raw) for raw in record.raw_items
+        ]
+        affected_keys = {self.key_extractor(item) for item in raw_items}
+
+        touched = strategy == "touched"
+        removed_keys: List[Any] = []
+        remerged_keys: List[Any] = []
+
+        for key in affected_keys:
+            current = self._storage.get(key)
+            if current is None:
+                continue  # already gone (e.g. removed with an earlier rollback)
+
+            survivors = [] if touched else self._raw_items_from_other_sources(
+                key, exclude=source_id
+            )
+
+            if survivors:
+                # Exact-ish rollback: re-merge the surviving sources' raw
+                # results. Deterministic for classic strategies; approximate
+                # wording for LLM strategies.
+                merged_list = self._merger.merge([current] + survivors)
+                merged = next(
+                    (m for m in merged_list if self.key_extractor(m) == key), None
+                )
+                if merged is None:
+                    survivors = []  # merger dissolved the key — remove it
+
+            if survivors:
+                old = current
+                for name in self._lookups:
+                    self._remove_from_lookup(name, key, old)
+                self._storage[key] = merged
+                self._update_all_lookups(key, merged, old_item=old)
+                remerged_keys.append(key)
+            else:
+                # No surviving contributors (or touched strategy): delete.
+                for name in self._lookups:
+                    self._remove_from_lookup(name, key, current)
+                del self._storage[key]
+                removed_keys.append(key)
+
+        return {
+            "source_id": source_id,
+            "strategy": strategy,
+            "removed_keys": removed_keys,
+            "remerged_keys": remerged_keys,
+        }
+
+    def remove_source(
+        self, source_id: str, *, strategy: str = "exact"
+    ) -> Dict[str, Any]:
+        """Remove every contribution of one source document.
+
+        With ``strategy="exact"`` (default), keys that other sources also
+        contributed to are re-merged from the surviving sources' raw results;
+        keys contributed solely by the removed source are deleted. With
+        ``strategy="touched"``, every key the source touched is deleted
+        outright. The vector index is patched in place when built.
+
+        Args:
+            source_id: Identifier used when the source was added.
+            strategy: "exact" (re-merge survivors) or "touched" (delete all
+                affected keys).
+
+        Returns:
+            Report dict with ``removed_keys``, ``remerged_keys``,
+            ``index_patched``, and the ``strategy`` used.
+        """
+        self._require_track_sources()
+        if strategy not in ("exact", "touched"):
+            raise ValueError(f"Unknown strategy: {strategy!r}")
+
+        with self.suspended_index():
+            report = self._rollback_source(source_id, strategy=strategy)
+
+        index_patched = self.sync_index(
+            removed_keys=set(report["removed_keys"]),
+            upserted_keys=set(report["remerged_keys"]),
+        )
+        report["index_patched"] = index_patched
+        logger.info(
+            "source_removed",
+            source_id=source_id,
+            strategy=strategy,
+            removed=len(report["removed_keys"]),
+            remerged=len(report["remerged_keys"]),
+        )
+        return report
+
+    def upsert_source(
+        self,
+        source_id: str,
+        items: Union[T, List[T]],
+        *,
+        content_hash: Optional[str] = None,
+        strategy: str = "exact",
+    ) -> Dict[str, Any]:
+        """Replace one source document: roll back the old version, merge the new.
+
+        This is the document-level upsert primitive. The previous version's
+        contributions are rolled back exactly (re-merging survivors), then
+        the new items are merged in. Pair with an external change detector
+        (or compare ``content_hash`` yourself) to only call this when a
+        document actually changed.
+
+        Args:
+            source_id: Identifier of the source document.
+            items: The new version's raw items.
+            content_hash: Optional hash of the new content (recorded for
+                change detection).
+            strategy: Rollback strategy for the old version ("exact" or
+                "touched").
+
+        Returns:
+            Report dict with ``removed_keys``, ``remerged_keys``,
+            ``added_keys``, and ``index_patched``.
+        """
+        self._require_track_sources()
+        if isinstance(items, BaseModel):
+            items = [items]
+        for item in items:
+            if not isinstance(item, self.memory_schema):
+                raise TypeError(
+                    f"Item must be {self.memory_schema.__name__}, got {type(item).__name__}"
+                )
+
+        report: Dict[str, Any] = {
+            "source_id": source_id,
+            "strategy": strategy,
+            "removed_keys": [],
+            "remerged_keys": [],
+            "added_keys": [],
+        }
+
+        with self.suspended_index():
+            if source_id in self._sources:
+                rollback = self._rollback_source(source_id, strategy=strategy)
+                report["removed_keys"] = rollback["removed_keys"]
+                report["remerged_keys"] = rollback["remerged_keys"]
+
+            self._sources[source_id] = SourceRecord(
+                source_id=source_id,
+                content_hash=content_hash,
+                raw_items=[item.model_dump() for item in items],
+            )
+            self.add(items)
+            report["added_keys"] = [self.key_extractor(item) for item in items]
+
+        self.sync_index(
+            removed_keys=set(report["removed_keys"]),
+            upserted_keys=set(report["remerged_keys"])
+            | set(report["added_keys"]),
+        )
+        report["index_patched"] = self.has_index()
+        logger.info(
+            "source_upserted",
+            source_id=source_id,
+            removed=len(report["removed_keys"]),
+            remerged=len(report["remerged_keys"]),
+            added=len(report["added_keys"]),
+        )
+        return report
+
+    def sources(self) -> Dict[str, Dict[str, Any]]:
+        """Summarize the source ledger.
+
+        Returns:
+            Dict mapping source_id to {raw_items, content_hash}.
+        """
+        return {
+            source_id: {
+                "raw_items": len(record.raw_items),
+                "content_hash": record.content_hash,
+            }
+            for source_id, record in self._sources.items()
+        }
+
+    def dump_sources(self, file_path: Union[str, Path]) -> None:
+        """Save the source ledger to a JSON file.
+
+        Pair with :meth:`dump_data` so provenance survives persistence.
+
+        Args:
+            file_path: File path to save the ledger (e.g., "sources.json").
+        """
+        file_path = Path(file_path)
+        payload = [record.model_dump() for record in self._sources.values()]
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        logger.info("sources_persisted", path=str(file_path), count=len(payload))
+
+    def load_sources(self, file_path: Union[str, Path]) -> None:
+        """Load the source ledger from a JSON file written by :meth:`dump_sources`.
+
+        Args:
+            file_path: File path to load the ledger from.
+        """
+        file_path = Path(file_path)
+        with open(file_path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+        self._sources = {
+            entry["source_id"]: SourceRecord(**entry) for entry in payload
+        }
+        logger.info(
+            "sources_loaded", path=str(file_path), count=len(self._sources)
+        )
+
     # --- Search & Indexing ---
 
     def build_index(self, force: bool = False) -> None:
@@ -861,10 +1152,24 @@ class OMem(BaseMem[T], Generic[T]):
             logger.error("data_persist_failed", error=str(e))
             raise
 
+    def _embedder_signature(self) -> str:
+        """Best-effort identity of the embedder (class + model attribute).
+
+        Used to detect embedding-model changes: vectors from different
+        models must never be mixed in one index.
+        """
+        embedder = self.embedder
+        model = getattr(embedder, "model", None) or getattr(
+            embedder, "model_name", None
+        ) or ""
+        return f"{type(embedder).__module__}.{type(embedder).__name__}:{model}"
+
     def dump_index(self, folder_path: Union[str, Path]) -> None:
         """Save vector index to a folder.
 
-        Index files will be saved directly in this folder.
+        Index files will be saved directly in this folder. A
+        ``index.meta.json`` companion file records the embedder signature
+        and index size so :meth:`load_index` can detect model mismatches.
 
         Args:
             folder_path: Folder path where index files will be saved.
@@ -878,6 +1183,13 @@ class OMem(BaseMem[T], Generic[T]):
         try:
             folder_path.mkdir(parents=True, exist_ok=True)
             self._index.save_local(str(folder_path))
+            meta = {
+                "format_version": 1,
+                "embedder_signature": self._embedder_signature(),
+                "num_vectors": self._index.index.ntotal,
+            }
+            with open(folder_path / "index.meta.json", "w", encoding="utf-8") as f:
+                json.dump(meta, f)
             logger.info("index_persisted", path=str(folder_path))
         except Exception as e:
             logger.warning("index_save_failed", error=str(e))
@@ -909,6 +1221,11 @@ class OMem(BaseMem[T], Generic[T]):
     def load_index(self, folder_path: Union[str, Path]) -> None:
         """Load vector index from a folder.
 
+        If the folder contains an ``index.meta.json`` written by a *different*
+        embedder, the index is rejected (kept unloaded) so vectors from two
+        embedding spaces are never mixed; the next ``build_index`` performs a
+        full rebuild. Legacy folders without a meta file load as before.
+
         Args:
             folder_path: Folder path containing index files.
         """
@@ -917,6 +1234,24 @@ class OMem(BaseMem[T], Generic[T]):
         if not folder_path.exists():
             logger.debug("no_index_folder", path=str(folder_path))
             return
+
+        meta_path = folder_path / "index.meta.json"
+        if meta_path.exists():
+            try:
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+                saved_signature = meta.get("embedder_signature")
+                current_signature = self._embedder_signature()
+                if saved_signature and saved_signature != current_signature:
+                    logger.warning(
+                        "index_embedder_mismatch",
+                        saved=saved_signature,
+                        current=current_signature,
+                        hint="build_index() will rebuild with the current embedder",
+                    )
+                    return
+            except Exception as e:
+                logger.warning("index_meta_read_failed", error=str(e))
 
         try:
             self._index = FAISS.load_local(
