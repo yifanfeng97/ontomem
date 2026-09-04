@@ -6,10 +6,11 @@ with intelligent deduplication, merging strategies, and Faiss-based vector searc
 
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, Type, Union
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from pydantic import BaseModel
 from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
 
@@ -20,6 +21,23 @@ from ..utils.logging import configure_logging, get_logger
 from langchain_community.vectorstores import FAISS
 
 logger = get_logger(__name__)
+
+# System prompt for LLM-assisted single-item editing (OMem.edit).
+DEFAULT_EDIT_PROMPT = (
+    "You are a precise memory editor. You receive one stored item as JSON "
+    "and a removal target (a fact or an editing instruction).\n\n"
+    "RULES:\n"
+    "1. Rewrite the item so that the target fact (and only that fact) is removed "
+    "or the instruction is applied.\n"
+    "2. Keep every other field, value, and wording EXACTLY unchanged.\n"
+    "3. NEVER change the item's identifier — its key must stay: {key}\n"
+    "4. If the fact does not appear in the item, return it unchanged.\n"
+    "5. Do not add new information.\n\n"
+    "# Current item\n"
+    "{item_json}\n\n"
+    "# Removal target\n"
+    "{target}"
+)
 
 
 class OMem(BaseMem[T], Generic[T]):
@@ -185,6 +203,11 @@ class OMem(BaseMem[T], Generic[T]):
         Returns:
             True if index exists, False otherwise.
         """
+        return self._index is not None
+
+    @property
+    def index_built(self) -> bool:
+        """Property alias for :meth:`has_index`."""
         return self._index is not None
 
     # --- Lookups (Secondary Indices) ---
@@ -459,6 +482,258 @@ class OMem(BaseMem[T], Generic[T]):
         self._storage.clear()
         self.clear_index()
         logger.info("memory_cleared")
+
+    def remove_many(self, keys: List[Any]) -> Tuple[List[Any], List[Any]]:
+        """Remove multiple items by key in one batch.
+
+        Unlike repeated :meth:`remove` calls, this does **not** clear the
+        vector index per key — pair it with :meth:`sync_index` to update the
+        index incrementally instead of dropping it.
+
+        Args:
+            keys: Keys of the items to remove.
+
+        Returns:
+            Tuple ``(removed_keys, not_found_keys)``.
+        """
+        removed: List[Any] = []
+        not_found: List[Any] = []
+        for key in keys:
+            item = self._storage.pop(key, None)
+            if item is None:
+                not_found.append(key)
+                continue
+            for name in self._lookups:
+                self._remove_from_lookup(name, key, item)
+            removed.append(key)
+        if removed:
+            logger.debug("items_removed", count=len(removed), size=self.size)
+        return removed, not_found
+
+    def upsert(self, items: Union[T, List[T]]) -> None:
+        """Insert or replace items by key, bypassing merge.
+
+        Unlike :meth:`add`, an existing item with the same key is **replaced
+        outright** instead of being merged with the incoming one. This does
+        **not** clear the vector index — pair with :meth:`sync_index` to
+        re-embed only the affected items.
+
+        Args:
+            items: Single entity or list of entities.
+
+        Raises:
+            TypeError: If an item is not of memory_schema type.
+        """
+        if isinstance(items, BaseModel):
+            items = [items]
+
+        for item in items:
+            if not isinstance(item, self.memory_schema):
+                raise TypeError(
+                    f"Item must be {self.memory_schema.__name__}, got {type(item).__name__}"
+                )
+
+        for item in items:
+            key = self.key_extractor(item)
+            old_item = self._storage.get(key)
+            if old_item is not None:
+                for name in self._lookups:
+                    self._remove_from_lookup(name, key, old_item)
+            self._storage[key] = item
+            self._update_all_lookups(key, item, old_item=old_item)
+
+        logger.debug("items_upserted", count=len(items), size=self.size)
+
+    def sync_index(
+        self,
+        *,
+        removed_keys: Optional[Iterable[Any]] = None,
+        upserted_keys: Optional[Iterable[Any]] = None,
+    ) -> bool:
+        """Incrementally update the vector index for the affected keys only.
+
+        Deletes the vectors of ``removed_keys``/``upserted_keys`` and embeds
+        only the upserted items — instead of the drop-and-full-rebuild
+        behavior that :meth:`add` / :meth:`remove` trigger. Pair with
+        :meth:`remove_many` / :meth:`upsert`:
+
+            removed, _ = memory.remove_many(["a", "b"])
+            memory.upsert(new_item)
+            memory.sync_index(removed_keys=removed, upserted_keys=[new_item_key])
+
+        The ``key → vector_id`` map is derived from the docstore, which
+        already stores the key per vector, so no storage-format change is
+        needed.
+
+        Args:
+            removed_keys: Keys whose vectors must be deleted.
+            upserted_keys: Keys present in memory whose vectors must be
+                re-embedded.
+
+        Returns:
+            True if the index was patched in place. False when no index is
+            built or patching failed — call :meth:`build_index` to fall back
+            to a full rebuild.
+        """
+        vs = self._index
+        if vs is None:
+            return False
+
+        removed_keys = list(removed_keys or [])
+        upserted_keys = list(upserted_keys or [])
+
+        # Detach first: a failure must leave us in the documented fallback
+        # state (no index -> lazy full rebuild), not a half-patched one.
+        self._index = None
+        try:
+            id_by_key: Dict[Any, str] = {}
+            for doc_id, doc in vs.docstore._dict.items():
+                doc_key = doc.metadata.get("key")
+                if doc_key is not None:
+                    id_by_key[doc_key] = doc_id
+
+            stale_ids = [
+                id_by_key[k]
+                for k in set(removed_keys) | set(upserted_keys)
+                if k in id_by_key
+            ]
+            if stale_ids:
+                vs.delete(stale_ids)
+
+            documents: List[Document] = []
+            for key in set(upserted_keys):
+                item = self._storage.get(key)
+                if item is None:
+                    continue
+                documents.append(
+                    Document(
+                        page_content=self._serialize_for_embedding(item),
+                        metadata={"key": key, "raw": item.model_dump()},
+                    )
+                )
+            if documents:
+                vs.add_documents(documents)
+        except Exception as exc:
+            logger.warning(
+                "index_sync_failed",
+                error=str(exc),
+                hint="build_index() will perform a full rebuild",
+            )
+            return False
+
+        self._index = vs
+        logger.info(
+            "index_synced",
+            removed=len(removed_keys),
+            upserted=len(upserted_keys),
+        )
+        return True
+
+    def edit(
+        self,
+        key: Any,
+        *,
+        remove_fact: str | None = None,
+        instruction: str | None = None,
+        editor: Optional[BaseChatModel] = None,
+        dry_run: bool = False,
+    ) -> Dict[str, Any]:
+        """LLM-assisted semantic edit of one stored item.
+
+        The stored item is rewritten under the **same schema** with the given
+        fact removed or the instruction applied, then replaced via
+        :meth:`upsert` — merge semantics are bypassed. Guardrails:
+
+        - **Key invariance** — a rewrite that changes the item's key is
+          rejected (renaming is delete + create, not an edit).
+        - **No-op detection** — if the LLM returns the item unchanged, the
+          report says so and nothing is written.
+        - **Dry run** — ``dry_run=True`` returns the proposal without
+          applying it.
+        - **Index** — when a vector index is built, the item's vector is
+          re-embedded in place via :meth:`sync_index` instead of discarding
+          the index.
+
+        Args:
+            key: Key of the item to edit.
+            remove_fact: Fact to remove from the item (exclusive with
+                ``instruction``).
+            instruction: Free-form edit instruction (exclusive with
+                ``remove_fact``).
+            editor: Chat model performing the rewrite. Defaults to the
+                ``llm_client`` provided at initialization.
+            dry_run: Return the proposed rewrite without applying it.
+
+        Returns:
+            Report dict with ``changed``, ``applied``, ``old``, ``new``, and
+            ``index_patched`` (True when the built index was updated in
+            place).
+
+        Raises:
+            KeyError: If ``key`` is not present.
+            ValueError: If both or neither of ``remove_fact``/``instruction``
+                are given, or the rewrite changed the item's key.
+            RuntimeError: If no LLM is available for the rewrite.
+        """
+        if (remove_fact is None) == (instruction is None):
+            raise ValueError("Provide exactly one of remove_fact= or instruction=.")
+        target = remove_fact if remove_fact is not None else instruction
+
+        model = editor or self.llm_client
+        if model is None:
+            raise RuntimeError(
+                "edit() requires an LLM: pass editor=... or initialize OMem "
+                "with llm_client."
+            )
+
+        old = self.get(key)
+        if old is None:
+            raise KeyError(f"No item with key: {key!r}")
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", DEFAULT_EDIT_PROMPT),
+                ("human", "Apply it to the item now."),
+            ]
+        )
+        chain = prompt | model.with_structured_output(self.memory_schema)
+
+        new = chain.invoke(
+            {"item_json": old.model_dump_json(), "key": key, "target": target}
+        )
+        new_key = self.key_extractor(new)
+        if new_key != key:
+            raise ValueError(
+                f"Rejected rewrite: the item key changed ({key!r} -> {new_key!r}). "
+                "Renaming is not an edit; remove the old item and add the new "
+                "one explicitly."
+            )
+        if new == old:
+            return {
+                "changed": False,
+                "applied": False,
+                "old": old,
+                "new": new,
+                "index_patched": self.has_index(),
+            }
+
+        if not dry_run:
+            self.upsert(new)
+
+        index_patched = False
+        if self.has_index():
+            index_patched = self.sync_index(upserted_keys=[key])
+
+        logger.info(
+            "item_edited", key=key, applied=not dry_run, changed=True
+        )
+        return {
+            "changed": True,
+            "applied": not dry_run,
+            "old": old,
+            "new": new,
+            "index_patched": index_patched,
+        }
 
     def clear_index(self) -> None:
         """Clear the vector index without affecting stored items."""
